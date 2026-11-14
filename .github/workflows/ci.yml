@@ -1,0 +1,45 @@
+name: Tracelet checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt
+      - run: PYTHONPATH=backend pytest backend/tests -q
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt
+      - run: npm ci && npm run build && npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: PYTHONPATH=backend uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log > /tmp/tracelet-api.log 2>&1 &
+      - run: npm run test:e2e
+        working-directory: frontend
+  cloudflare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci && npm run build:cloudflare && npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm ci && npm test && npm run build && npm run migrate:local
+        working-directory: cloudflare
+      - run: npx playwright test --config playwright.cloudflare.config.ts
+        working-directory: frontend

@@ -1,0 +1,11 @@
+fastapi==0.162.7
+uvicorn==0.54.0
+httpx==0.28.1
+pydantic==2.14.3
+cryptography==50.0.2
+phonenumbers==9.0.43
+Pillow==13.0.0
+pypdf==7.1.0
+python-multipart==0.0.33
+dnspython==2.9.2
+pytest==9.2.0

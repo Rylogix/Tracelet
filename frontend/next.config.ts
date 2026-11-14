@@ -1,0 +1,31 @@
+import type { NextConfig } from "next";
+const hosted = process.env.TRACELET_HOSTED === "1";
+const config: NextConfig = {
+  output: hosted ? "export" : "standalone",
+  experimental: { cpus: 2 },
+  ...(hosted
+    ? {}
+    : {
+        async rewrites() {
+          return [
+            {
+              source: "/api/:path*",
+              destination: `${process.env.TRACELET_BACKEND || "http://127.0.0.1:8000"}/api/:path*`,
+            },
+          ];
+        },
+        async headers() {
+          return [
+            {
+              source: "/:path*",
+              headers: [
+                { key: "X-Frame-Options", value: "DENY" },
+                { key: "Referrer-Policy", value: "no-referrer" },
+                { key: "X-Content-Type-Options", value: "nosniff" },
+              ],
+            },
+          ];
+        },
+      }),
+};
+export default config;

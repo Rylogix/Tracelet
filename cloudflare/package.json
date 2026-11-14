@@ -1,0 +1,27 @@
+{
+  "name": "tracelet-cloudflare",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc --noEmit && wrangler deploy --dry-run --outdir /tmp/tracelet-worker-build",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "migrate:local": "wrangler d1 migrations apply tracelet --local --config wrangler.dev.jsonc",
+    "migrate:remote": "wrangler d1 migrations apply tracelet --remote"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.2.0",
+    "jose": "^6.1.0",
+    "libphonenumber-js": "^1.12.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "miniflare": "^5.20261113.0-beta",
+    "typescript": "^5.7.3",
+    "undici": "^8.12.4",
+    "vitest": "latest",
+    "wrangler": "latest"
+  }
+}
