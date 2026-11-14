@@ -59,3 +59,7 @@ MIT licensed. Third-party tools and provider data retain their own licenses and 
 ### Public username discovery
 
 Username searches check 29 public platforms concurrently and show only confirmed public profiles as possible matches. Expand Checks to see missing profiles, blocked requests and unavailable sources. Choose Username to search a dotted handle instead of a domain. See [INTEGRATIONS.md](INTEGRATIONS.md) for exact coverage.
+
+### Designed PDF reports
+
+PDF exports include a coal cover, actual search/finding/source totals, category coverage, a clickable search index, dedicated search sections, labeled nested-evidence tables, source URLs, confidence and observation times, availability notes, source-check outcomes and a linked evidence register. Long observations paginate instead of being truncated. A UTF-8 text attachment preserves the complete original selected report. Rendering is local to the browser; no third-party PDF service receives your data.

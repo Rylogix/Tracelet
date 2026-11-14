@@ -116,3 +116,11 @@ Findings now start collapsed in one vertical column across source tabs and repor
 The production frontend build passed. Hosted desktop/mobile browser suite: six passed, two optional external smoke checks skipped; includes collapse-aware number/document checks, report edits and full PDF/TXT/clipboard exports. Deployed Worker version 658739a7-15b9-4f3b-ae0c-de7cf32d33c5.
 
 Production live workflow passed, verifying all 12 actual username matches render as individual pills, one-column alignment, expand/collapse state, and exact profile URLs with separate-tab behavior.
+
+## Designed PDF exports — 2026-11-14
+
+Replaced the plain-text PDF body with a coal cover, report totals/coverage, clickable search index, search sections, source/confidence/timestamp headers, labeled evidence rows, availability notes, source checks and a clickable source register. Detail pages use a white background and embedded regular/bold fonts. Long titles fit the cover; long evidence and nested values paginate without losing data. The original UTF-8 report remains attached, preserving unsupported glyphs and exact source values. No server PDF service, external assets or additional credentials are used.
+
+Validation: new PDF tests exercise nested values, empty/null/zero/false observations, long multi-page biographies, navigation annotations, metadata and the embedded data attachment. Worker suite: 95 passed, two optional external checks skipped. Frontend build passed. Hosted desktop/mobile browser suite: six passed, two optional live-provider checks skipped, including genuine PDF download/load, four or more designed pages, Unicode title and index annotations, report selection, clipboard/TXT behavior and account isolation. Rendered fixture cover/detail pages were inspected visually; extracted text retained the final long-biography marker and nested evidence, while excluded queries were absent.
+
+Deployed Worker 16016157-c0d6-4e98-80a1-11ab1303c941. Production mobile report workflow passed, including an actual designed PDF download, metadata, multiple pages and navigation annotations.

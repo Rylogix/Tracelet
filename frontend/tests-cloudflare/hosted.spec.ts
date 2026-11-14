@@ -157,7 +157,8 @@ test("public passkey signup, private real search, signout and account isolation"
   const pdfDownload=page.waitForEvent("download");
   await page.getByRole("button",{name:"PDF",exact:true}).click();
   const bytes=readFileSync((await (await pdfDownload).path())!);expect(bytes.subarray(0,5).toString()).toBe("%PDF-");
-  const pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBeGreaterThan(0);expect(pdf.getTitle()).toBe("Workflow α case");
+  const pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBeGreaterThanOrEqual(4);expect(pdf.getTitle()).toBe("Workflow α case");
+  expect(pdf.getPages().some(p=>(p.node.Annots()?.size()||0)>0)).toBe(true);
   await page.context().grantPermissions(["clipboard-read","clipboard-write"]);
   await page.getByRole("button",{name:"Copy",exact:true}).click();
   await expect(page.getByRole("button",{name:"Copied",exact:true})).toBeVisible();
