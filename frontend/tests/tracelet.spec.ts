@@ -16,6 +16,7 @@ test("first run and real phone search", async ({ page }) => {
   await expect(page.getByText("Number format", { exact: true }).first()).toBeVisible({
     timeout: 20000,
   });
+  await page.getByRole("button",{name:"Expand Number format details",exact:true}).first().click();
   await expect(page.getByText("United Kingdom", { exact: true }).first()).toBeVisible();
   expect(
     await page.evaluate(

@@ -74,6 +74,8 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });
+  await expect(page.getByRole("button",{name:"Expand Number format details",exact:true})).toHaveAttribute("aria-expanded","false");
+  await page.getByRole("button",{name:"Expand Number format details",exact:true}).click();
   await expect(page.getByText("United Kingdom", { exact: true })).toBeVisible();
   await expect(page.getByText("E164",{exact:true})).toBeVisible();
   const card=page.locator(".finding-card").first();
@@ -273,7 +275,7 @@ test("office document metadata stays in the browser",async({page})=>{
  const bytes=zipSync({'docProps/core.xml':strToU8('<cp:coreProperties><dc:title>Document fixture</dc:title><dc:creator>Test author</dc:creator></cp:coreProperties>'),'docProps/app.xml':strToU8('<Properties><Application>Test editor</Application><Words>123</Words></Properties>')});
  const uploads:string[]=[];page.on('request',r=>{if(r.url().includes('/api/files'))uploads.push(r.url())});
  await page.getByLabel("Upload file for local analysis").setInputFiles({name:"fixture.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(bytes)});
- await expect(page.getByText("Document properties",{exact:true})).toBeVisible();await expect(page.getByText("Test author",{exact:true})).toBeVisible();await expect(page.getByText("Test editor",{exact:true})).toBeVisible();expect(uploads).toEqual([]);
+ await expect(page.getByText("Document properties",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Expand Document properties details",exact:true}).click();await expect(page.getByText("Test author",{exact:true})).toBeVisible();await expect(page.getByText("Test editor",{exact:true})).toBeVisible();expect(uploads).toEqual([]);
  await page.request.delete('/api/account',{headers:{'X-Tracelet-Client':'local-ui'}});
 });
 
@@ -344,6 +346,20 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
   const scan=await searchTab("Username","octocat");
   expect(scan.total).toBe(29);expect(scan.checks).toHaveLength(29);
   expect(scan.findings.length).toBeGreaterThan(0);
+  await expect(page.locator(".finding-pill")).toHaveCount(scan.findings.length);
+  const first=scan.findings[0];
+  const profileLink=page.getByRole("link",{name:"Open "+first.source+" profile",exact:true});
+  await expect(profileLink).toHaveAttribute("href",first.evidence);
+  await expect(profileLink).toHaveAttribute("target","_blank");
+  const toggle=page.getByRole("button",{name:"Expand "+first.source+" details",exact:true});
+  await expect(toggle).toHaveAttribute("aria-expanded","false");
+  await toggle.click();
+  await expect(page.getByRole("button",{name:"Collapse "+first.source+" details",exact:true})).toHaveAttribute("aria-expanded","true");
+  await page.getByRole("button",{name:"Collapse "+first.source+" details",exact:true}).click();
+  const columns=await page.locator(".finding-pill").evaluateAll(nodes=>nodes.map(n=>({x:n.getBoundingClientRect().x,width:n.getBoundingClientRect().width})));
+  expect(new Set(columns.map(c=>Math.round(c.x))).size).toBe(1);
+  expect(new Set(columns.map(c=>Math.round(c.width))).size).toBe(1);
+
   expect(scan.findings.some((f:{value:any})=>f.value.bio||f.value.created_at||typeof f.value.followers==='number')).toBe(true);
   const github=scan.checks.find((c:{provider:string})=>c.provider==="github");
   expect(["found","unavailable"]).toContain(github.status);

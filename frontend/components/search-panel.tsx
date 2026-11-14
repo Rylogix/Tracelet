@@ -9,7 +9,7 @@ import {Button} from "./ui/button";
 import {useWorkflow,type Entry} from "./workflow";
 export const kinds=[{id:"username",label:"Username",placeholder:"Username"},{id:"email",label:"Email",placeholder:"name@example.com"},{id:"phone",label:"Number",placeholder:"+44 20 7946 0018"},{id:"file",label:"Files",placeholder:""},{id:"website",label:"Website",placeholder:"example.com"}];
 export function EntryPanel({entry,report=false,readOnly=false}:{entry:Entry;report?:boolean;readOnly?:boolean}) {
-  const {include,cancel}=useWorkflow();const [expanded,setExpanded]=useState(false);const [error,setError]=useState("");
+  const {include,cancel}=useWorkflow();const [error,setError]=useState("");
   const job=entry.job;const active=["queued","running"].includes(job.status);
   const label=kinds.find(k=>k.id===job.kind)?.label||job.kind;
   return <section className="panel workflow-entry result-arrival" aria-label={label+" search: "+job.query}>
@@ -25,8 +25,7 @@ export function EntryPanel({entry,report=false,readOnly=false}:{entry:Entry;repo
     {active && job.total>0 && <div className="job-progress" role="progressbar" aria-label="Investigation progress" aria-valuenow={job.completed} aria-valuemax={job.total}><span style={{width:Math.min(100,job.completed/job.total*100)+"%"}}/></div>}
     {error && <p role="alert" className="error">{error}</p>}
     {active && !job.findings.length && <div className="finding-skeleton" aria-label="Searching sources"><span/><span/><span/></div>}
-    <Findings items={expanded?job.findings:job.findings.slice(0,4)}/>
-    {job.findings.length>4 && <button className="text-action" onClick={()=>setExpanded(!expanded)}>{expanded?"Show less":`View all ${job.findings.length} findings`}</button>}
+    <Findings items={job.findings} username={job.kind==="username"}/>
     {!active && !job.findings.length && <div className="entry-empty">No findings.</div>}
     {(job.checks?.length || job.notes.length || job.errors.length || job.unavailable.length)>0 && <details className="compact-details"><summary>{job.checks?`Checks (${job.completed}/${job.total})`:"Details"}</summary>
       {job.notes.map((n,i)=><p key={i}>{n}</p>)}
