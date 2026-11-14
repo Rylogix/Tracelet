@@ -124,3 +124,11 @@ Replaced the plain-text PDF body with a coal cover, report totals/coverage, clic
 Validation: new PDF tests exercise nested values, empty/null/zero/false observations, long multi-page biographies, navigation annotations, metadata and the embedded data attachment. Worker suite: 95 passed, two optional external checks skipped. Frontend build passed. Hosted desktop/mobile browser suite: six passed, two optional live-provider checks skipped, including genuine PDF download/load, four or more designed pages, Unicode title and index annotations, report selection, clipboard/TXT behavior and account isolation. Rendered fixture cover/detail pages were inspected visually; extracted text retained the final long-biography marker and nested evidence, while excluded queries were absent.
 
 Deployed Worker 16016157-c0d6-4e98-80a1-11ab1303c941. Production mobile report workflow passed, including an actual designed PDF download, metadata, multiple pages and navigation annotations.
+
+## Minimal guest homepage — 2026-11-14
+
+Added a short coal-and-white homepage with one description, five search-category labels and Get started / Sign in links. Authentication now has `/login`; the dashboard is `/dashboard`. Existing sessions bypass both public entry routes, unauthenticated workspace routes lead to sign-in, and logout returns to the homepage. No workspace draft is requested from the guest homepage. Local mode still bypasses sign-in.
+
+Frontend production build passed. Hosted desktop/mobile browser suite: eight passed, two optional live-provider checks skipped. Coverage includes homepage-to-login navigation, guest dashboard protection, no guest workspace requests, real passkey signup, signed-in root/login redirects, signout-to-home, sign-in-to-dashboard, private report persistence/exports and account isolation. Mobile homepage was visually inspected.
+
+Deployed Worker 46404597-06d7-497a-9598-760069246c07. Production mobile checks passed for the complete passkey/report workflow plus guest homepage, authenticated redirects and dashboard protection (two tests).

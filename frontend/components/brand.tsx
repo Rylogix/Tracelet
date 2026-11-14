@@ -24,9 +24,9 @@ export function TraceMark({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-export function Brand({ compact = false }: { compact?: boolean }) {
+export function Brand({ compact = false, href = "/" }: { compact?: boolean; href?:string }) {
   return (
-    <Link href="/" className="brand" aria-label="Tracelet home">
+    <Link href={href} className="brand" aria-label="Tracelet home">
       <span className="brand-icon">
         <TraceMark />
       </span>

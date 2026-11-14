@@ -33,6 +33,10 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(
     page.getByRole("heading", { name: "Free OSINT." }),
   ).toBeVisible();
+  await expect(page.getByText("Search public information and organize your findings into one report.",{exact:true})).toBeVisible();
+  await page.getByRole("link",{name:"Get started",exact:true}).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading",{name:"Sign in",exact:true})).toBeVisible();
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
@@ -54,6 +58,12 @@ test("public passkey signup, private real search, signout and account isolation"
   await page.getByLabel("Username", { exact: true }).fill(name);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible({timeout:30000});
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("link",{name:"Get started",exact:true})).toHaveCount(0);
+  await page.goto("/login");
+  await expect(page).toHaveURL(/\/dashboard$/);
   expect(
     (
       await page.request.post("/api/auth/register/verify", {
@@ -186,7 +196,7 @@ test("public passkey signup, private real search, signout and account isolation"
   });
   const p = await other.newPage();
   await passkey(p);
-  await p.goto("/");
+  await p.goto("/login");
   await p.getByRole("button", { name: "Create account", exact: true }).click();
   await p.getByLabel("Username", { exact: true }).fill("other-" + Date.now());
   await p.getByRole("button", { name: "Create account" }).click();
@@ -211,15 +221,17 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(
     page.getByRole("heading", { name: "Free OSINT." }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
   expect((await page.request.get("/api/history")).status()).toBe(401);
+  await page.getByRole("link",{name:"Sign in",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"Sign in",exact:true})).toBeVisible();
   const loginOptions=page.waitForResponse(r=>r.url().endsWith("/api/auth/login/options"));
   await page.getByRole("button", { name: "Sign in" }).click();
   if((await loginOptions).status()===429){
     await page.waitForTimeout(61000-(Date.now()%60000));
     await page.getByRole("button", {name:"Sign in",exact:true}).click();
   }
-  await expect(page.getByRole("heading",{name:"Report",exact:true})).toBeVisible({timeout:30000});
+  await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible({timeout:30000});
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
@@ -271,13 +283,32 @@ test("public passkey signup, private real search, signout and account isolation"
   ).toBe(200);
 });
 test("office document metadata stays in the browser",async({page})=>{
- await passkey(page);await page.goto("/");await page.getByRole("button",{name:"Create account",exact:true}).click();await page.getByLabel("Username",{exact:true}).fill("office-"+Date.now());await page.getByRole("button",{name:"Create account",exact:true}).click();await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible();
+ await passkey(page);await page.goto("/login");await page.getByRole("button",{name:"Create account",exact:true}).click();await page.getByLabel("Username",{exact:true}).fill("office-"+Date.now());await page.getByRole("button",{name:"Create account",exact:true}).click();await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible();
  await page.getByRole("link",{name:"Files",exact:true}).click();
  const bytes=zipSync({'docProps/core.xml':strToU8('<cp:coreProperties><dc:title>Document fixture</dc:title><dc:creator>Test author</dc:creator></cp:coreProperties>'),'docProps/app.xml':strToU8('<Properties><Application>Test editor</Application><Words>123</Words></Properties>')});
  const uploads:string[]=[];page.on('request',r=>{if(r.url().includes('/api/files'))uploads.push(r.url())});
  await page.getByLabel("Upload file for local analysis").setInputFiles({name:"fixture.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(bytes)});
  await expect(page.getByText("Document properties",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Expand Document properties details",exact:true}).click();await expect(page.getByText("Test author",{exact:true})).toBeVisible();await expect(page.getByText("Test editor",{exact:true})).toBeVisible();expect(uploads).toEqual([]);
  await page.request.delete('/api/account',{headers:{'X-Tracelet-Client':'local-ui'}});
+});
+
+test("guest homepage leads to sign-in and protects the dashboard",async({page})=>{
+ const workspaceRequests:string[]=[];
+ page.on("request",r=>{if(r.url().endsWith("/api/workspace"))workspaceRequests.push(r.url())});
+ await page.goto("/");
+ await expect(page.getByRole("heading",{name:"Free OSINT.",exact:true})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Get started",exact:true})).toHaveAttribute("href","/login");
+ await expect(page.getByRole("navigation",{name:"Main navigation"})).toHaveCount(0);
+ expect(workspaceRequests).toEqual([]);
+ if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-home-"+test.info().project.name+".png",fullPage:true});
+ await page.goto("/dashboard");
+ await expect(page).toHaveURL(/\/login$/);
+ await expect(page.getByRole("heading",{name:"Sign in",exact:true})).toBeVisible();
+ expect(workspaceRequests).toEqual([]);
+ await page.goto("/");
+ await page.getByRole("link",{name:"Sign in",exact:true}).click();
+ await expect(page).toHaveURL(/\/login$/);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
 test("rejects unauthenticated mutations and cross-origin calls", async ({
@@ -316,7 +347,7 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
   );
   test.setTimeout(120000);
   await passkey(page);
-  await page.goto("/");
+  await page.goto("/login");
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();

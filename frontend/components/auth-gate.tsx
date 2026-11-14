@@ -1,19 +1,12 @@
 "use client";
+import {usePathname,useRouter} from "next/navigation";
+import {Homepage} from "./homepage";
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   startRegistration,
   startAuthentication,
 } from "@simplewebauthn/browser";
-import {
-  Fingerprint,
-  KeyRound,
-  ArrowRight,
-  ArrowUpRight,
-  ShieldCheck,
-  LockKeyhole,
-  ScanLine,
-  LoaderCircle,
-} from "lucide-react";
+import {KeyRound,ArrowUpRight,LoaderCircle} from "lucide-react";
 import { Brand } from "./brand";
 import { Button } from "./ui/button";
 import { api } from "./api";
@@ -24,6 +17,7 @@ const Runtime = createContext({
 });
 export const useRuntime = () => useContext(Runtime);
 export function AuthGate({ children }: { children: React.ReactNode }) {
+  const path=usePathname();const router=useRouter();
   const [status, setStatus] = useState<
     "loading" | "local" | "login" | "signed-in" | "error"
   >("loading");
@@ -53,6 +47,11 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void load();
   }, []);
+  useEffect(()=>{
+    if(status==="login" && path!=="/" && path!=="/login")router.replace("/login");
+    if((status==="signed-in"||status==="local") && (path==="/"||path==="/login"))router.replace("/dashboard");
+  },[status,path,router]);
+  useEffect(()=>{if(path==="/login")setCreating(false)},[path]);
   async function authenticate(register: boolean) {
     setBusy(true);
     setError("");
@@ -94,11 +93,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       setBusy(false);
     }
   }
-  if (status === "loading")
+  if (status === "loading" || status === "login" && path!=="/" && path!=="/login" || (status === "signed-in" || status === "local") && (path==="/"||path==="/login"))
     return (
       <div className="auth-screen">
-        <Fingerprint size={36} />
-        <p>Opening your workspace…</p>
+        <LoaderCircle size={22} className="spin" aria-label="Loading" />
       </div>
     );
   if (status === "error")
@@ -110,8 +108,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   async function signOut() {
     await api("/auth/logout", { method: "POST", body: "{}" });
-    location.reload();
+    location.assign("/");
   }
+  if (status === "login" && path==="/")return <Homepage/>;
   if (status === "login")
     return (
       <div className="auth-minimal">
@@ -126,7 +125,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </a>
         </header>
         <main className="auth-entry">
-          <h1>Free OSINT.</h1>
+          <h1>{creating?"Create account":"Sign in"}</h1>
           <div className="auth-entry-card">
             {creating ? (
               <form

@@ -63,3 +63,7 @@ Username searches check 29 public platforms concurrently and show only confirmed
 ### Designed PDF reports
 
 PDF exports include a coal cover, actual search/finding/source totals, category coverage, a clickable search index, dedicated search sections, labeled nested-evidence tables, source URLs, confidence and observation times, availability notes, source-check outcomes and a linked evidence register. Long observations paginate instead of being truncated. A UTF-8 text attachment preserves the complete original selected report. Rendering is local to the browser; no third-party PDF service receives your data.
+
+### Homepage and sign-in
+
+Signed-out visitors see a short introduction at `/`, with Get started / Sign in leading to `/login`. Existing hosted sessions skip the public pages and open `/dashboard`. Signing out returns to the introduction. Other workspace pages require a session; the private local edition continues straight to its dashboard.
