@@ -1,9 +1,10 @@
+import { startSherlock, refreshSherlock, cancelSherlock, sherlockEnabled, type SherlockEnv } from "./sherlock";
 import { platforms, scanProfiles, type ProfileCheck } from "./usernames";
 import { auth, owner as identify, json, type AuthEnv } from "./auth";
 import { detect, domain, encrypt } from "./security";
 import { registry } from "./registry";
 import { adapter, type ProviderEnv, type Finding } from "./providers";
-interface Env extends AuthEnv, ProviderEnv {
+interface Env extends AuthEnv, ProviderEnv, SherlockEnv {
   ASSETS: Fetcher;
 }
 type Job = {
@@ -20,6 +21,7 @@ type Job = {
   unavailable: { name: string; reason: string }[];
   completed: number;
   total: number;
+  engine?: string;
   checks?: ProfileCheck[];
 };
 const stamp = () => new Date().toISOString();
@@ -38,17 +40,17 @@ async function integrations(env: Env, owner: string) {
   const tested = new Set(health.results.map((r) => r.provider));
   return registry.map((i) => {
     const available =
-      !("restricted" in i && i.restricted) &&
+      (i.id === "sherlock" ? sherlockEnabled(env) : !("restricted" in i && i.restricted)) &&
       (!i.credential || (connected.has(i.id) && tested.has(i.id)));
     return {
       ...i,
       available,
-      installed: !("restricted" in i && i.restricted),
+      installed: (i.id === "sherlock" ? sherlockEnabled(env) : !("restricted" in i && i.restricted)),
       connected: i.credential ? connected.has(i.id) : true,
       status: available
         ? "Available"
         : "restricted" in i && i.restricted
-          ? "Unavailable in hosted edition"
+          ? i.id === "sherlock" ? "Cloudflare container not enabled" : "Unavailable in hosted edition"
           : connected.has(i.id)
             ? "Connection test required"
             : "API key required",
@@ -80,6 +82,15 @@ async function runJob(env: Env, owner: string, job: Job) {
   job.status = "running";
   await persist(env, owner, job);
   if (job.kind === "username") {
+    if (sherlockEnabled(env)) {
+      try {
+        await startSherlock(env, owner, job);
+        const current = await env.DB.prepare("SELECT status FROM jobs WHERE id=? AND owner=?").bind(job.id,owner).first<{status:string}>();
+        if (!current || current.status === "cancelled") { await cancelSherlock(env,job.id); return; }
+        await persist(env, owner, job); return;
+      }
+      catch { job.unavailable.push({name:"Sherlock",reason:"Unavailable; using public API checks"}); }
+    }
     job.checks = [];
     job.total = platforms.length;
     job.completed = 0;
@@ -283,7 +294,7 @@ async function routes(
             provider: i.id,
             name: i.name,
             available: i.available,
-            unit: "requests",
+            unit: i.id === "sherlock" ? "searches" : "requests",
             reset_frequency: "unknown",
             source: r.confirmed
               ? "provider headers (keyless limits may share Cloudflare egress IP)"
@@ -400,7 +411,7 @@ async function routes(
         429,
       );
     const cache = await env.DB.prepare(
-      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND status='completed' AND updated>? LIMIT 1",
+      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
     )
       .bind(owner, query, kind, Date.now() - 300000)
       .first<{ payload: string }>();
@@ -470,12 +481,16 @@ async function routes(
     if (!row) return json({ detail: "Search not found" }, 404);
     const job = JSON.parse(row.payload) as Job;
     if (search[2] && method === "POST") {
+      if (job.engine === "sherlock") await cancelSherlock(env, job.id).catch(() => {});
       job.status = "cancelled";
       await env.DB.prepare(
         "UPDATE jobs SET status='cancelled',payload=? WHERE id=? AND owner=?",
       )
         .bind(JSON.stringify(job), job.id, owner)
         .run();
+    } else if (job.engine === "sherlock" && ["queued", "running"].includes(row.status)) {
+      try { await refreshSherlock(env, job); } catch { job.status="partial";job.notes.push("Sherlock unavailable"); }
+      await persist(env, owner, job);
     } else if (
       ["queued", "running"].includes(row.status) &&
       Date.now() - row.updated > 60000

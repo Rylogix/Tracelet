@@ -69,3 +69,17 @@ The interface uses compact sign-in/create-account actions, a single search field
 ## Footprint removal — 2026-11-14
 
 Removed the page, navigation, API routes, verification and scheduled monitoring. Migration 0003 removes hosted footprint records and alerts; local migration 4 removes footprint, ownership and alerts tables. Account deletion remains in Settings. Python: 18 passed. Worker: 81 passed, 2 optional live tests skipped. Hosted desktop/mobile browser checks: 4 passed. Static build and TypeScript passed.
+
+## Sherlock Cloudflare container adapter — 2026-11-14
+
+Prepared a private Python service and container-enabled Durable Object, plus an explicit opt-in main Worker configuration. The normal production config keeps it disabled and uses the free public API checks. Deployed inactive adapter code to the existing Worker; no paid service binding is enabled.
+
+- Real Sherlock 0.16.2 Linux/Python service scan: completed 411 eligible catalog checks for the public fixture octocat within the 180-second deadline: 112 heuristic possible matches, 211 absent, 87 unavailable, one skipped. Matching handles do not establish identity. This does not validate every site's detection rule or terms.
+- Real child-process cancellation passed. Earlier 90-second run correctly preserved partial results at its deadline; final configuration allows 180 seconds.
+- Python service: 10 tests passed, including request validation, busy gate, cancellation, private-target blocking and HTTP/WAF error classification. Existing backend: 18 passed.
+- Worker suite: 85 passed, two optional live checks skipped. TypeScript for main Worker and container controller passed. Opt-in main Worker dry-run and binding type generation passed.
+- Docker image built successfully with an optional development CA secret. Container runtime could not be started in this workspace because Docker's VFS copy exhausted available disk. Only this task's image/cache artifacts were removed afterward. Native service execution was tested; Cloudflare-hosted container execution is not yet validated.
+- Existing desktop/mobile browser tests: four passed, two optional external smoke tests skipped. Production mobile: two passed, one optional live test skipped. Production mobile sign-out assertion was updated to wait for the actual Sign in button; the shared hero heading could previously satisfy that wait before logout completed.
+- Cloudflare Containers API refused account access: Workers Paid required. Billing endpoints are not accessible through the current OAuth connection. No plan upgrade, paid container deployment or billing modification was performed.
+
+See cloudflare/sherlock/README.md for the exact catalog provenance, constraints, account requirement, deployment commands and limitations.

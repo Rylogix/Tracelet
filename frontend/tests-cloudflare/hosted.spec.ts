@@ -153,6 +153,7 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(
     page.getByRole("heading", { name: "Free OSINT." }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   expect((await page.request.get("/api/history")).status()).toBe(401);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});

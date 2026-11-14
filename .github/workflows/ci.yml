@@ -43,3 +43,13 @@ jobs:
         working-directory: cloudflare
       - run: npx playwright test --config playwright.cloudflare.config.ts
         working-directory: frontend
+
+  sherlock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r cloudflare/sherlock/requirements.txt pytest httpx
+      - run: PYTHONPATH=cloudflare/sherlock pytest cloudflare/sherlock/tests -q

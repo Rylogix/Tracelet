@@ -67,10 +67,10 @@ export const registry = [
   {
     id: "sherlock",
     name: "Sherlock",
-    description: "Python subprocess tool; requires the self-hosted edition.",
-    kinds: [],
+    description: "Public username checks through a private Cloudflare Python container.",
+    kinds: ["username"],
     credential: false,
-    rate: null,
+    rate: 1,
     restricted: true,
     docs: "https://github.com/sherlock-project/sherlock",
     license: "MIT",
