@@ -33,7 +33,6 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       <span>
         tracelet<span className="brand-period">.</span>
       </span>
-      {!compact && <span className="beta">BETA</span>}
     </Link>
   );
 }
