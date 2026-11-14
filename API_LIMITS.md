@@ -1,5 +1,7 @@
 # API limits and usage provenance
 
+Usage appears in compact badges on the relevant Username, Email and Website lookup pages. Click a badge for quota details and a personal request cap. Unknown username sources are grouped to keep the page compact. Number and Files use offline/browser tools and show no external API meter. There is no separate API Usage page.
+
 Tracelet never invents an external allowance. Missing provider values are `null` and rendered **Unknown**. Offline/browser modules do not consume external API quota. A configured local safety rate is not a provider-confirmed allowance.
 
 | Provider | Local safety gate | Reported quota | Billing adapter |
@@ -15,7 +17,7 @@ Local budgets are lifetime attempt caps for that provider/account, including fai
 
 Hosted rate locks are atomic and shared across users to protect common egress limits. The local edition uses per-provider asyncio locks and SQLite atomic budget reservations. Both are single deployed application instances; deploying additional independent instances would need shared quota coordination.
 
-Percentage alerts use provider limit and remaining only, at 50%, 80%, 90%, 100%. The UI lets users choose a subset of thresholds, stored through `/api/usage/alerts` in either deployment mode. Unknown percentages produce no false exhaustion alerts. Reset frequency is unknown unless a future validated provider adapter explicitly reports it.
+Percentage alerts use provider limit and remaining only, at 50%, 80%, 90%, 100%. Settings → Usage alerts lets users choose a subset of thresholds, stored through `/api/usage/alerts` in either deployment mode. Unknown percentages produce no false exhaustion alerts. Reset frequency is unknown unless a future validated provider adapter explicitly reports it.
 
 No credit-metered adapter or official usage-account endpoint is enabled in this version. The registry and UI must not pretend that generic response headers cover provider-specific endpoint billing, credit costs, separate endpoint buckets, or shared personal accounts. Those adapters require provider-specific tests before release.
 

@@ -280,6 +280,7 @@ async function routes(
           ...p,
           available: true,
           rate: p.safety_per_minute,
+          kinds:["username"],
         })),
       ]
         .filter((i) => i.rate !== null)
@@ -307,6 +308,7 @@ async function routes(
             blocked_until: (r.blocked_until || 0) / 1000,
             provider: i.id,
             name: i.name,
+            kinds:i.kinds,
             available: i.available,
             unit: i.id === "sherlock" ? "searches" : "requests",
             reset_frequency: "unknown",

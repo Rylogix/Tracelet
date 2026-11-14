@@ -275,6 +275,7 @@ def usage():
                 **row,
                 "provider": item["id"],
                 "name": item["name"],
+                "kinds": item["kinds"],
                 "available": item["available"],
                 "unit": "requests",
                 "source": "provider headers"

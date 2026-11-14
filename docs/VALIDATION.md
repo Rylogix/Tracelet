@@ -132,3 +132,12 @@ Added a short coal-and-white homepage with one description, five search-category
 Frontend production build passed. Hosted desktop/mobile browser suite: eight passed, two optional live-provider checks skipped. Coverage includes homepage-to-login navigation, guest dashboard protection, no guest workspace requests, real passkey signup, signed-in root/login redirects, signout-to-home, sign-in-to-dashboard, private report persistence/exports and account isolation. Mobile homepage was visually inspected.
 
 Deployed Worker 46404597-06d7-497a-9598-760069246c07. Production mobile checks passed for the complete passkey/report workflow plus guest homepage, authenticated redirects and dashboard protection (two tests).
+
+
+## Lookup usage badges — 2026-11-14
+
+Removed the API Usage navigation and page. Username, Email and Website now show provider-specific compact badges with confirmed remaining quota when reported, honest local/unknown tracking otherwise, inline details and personal request caps. Unknown username sources are grouped. Offline Number and Files have no external usage meter. Usage alerts remain configurable in Settings. The protected usage API and its encrypted-credential boundaries remain intact; backend responses now declare supported lookup kinds. Polling reads local counters and does not call external providers.
+
+Validation: Worker 100 tests passed, two optional live-provider checks skipped; Python 22 passed; hosted browser suite eight passed on desktop/mobile, two optional external checks skipped; local desktop/mobile browser suite four passed. New tests cover unknown/confirmed/stale quotas, local budget provenance, exhaustion and rate limits. Browser checks verify the removed page returns 404, username source filtering, unknown quotas without invented meters, saving caps, offline absence, real phone results, account isolation and report exports. Frontend static build and Worker TypeScript/dry-run passed.
+
+Deployed Worker a4fb8c39-2567-47f9-975e-821f65df6b86. Production mobile passkey/report workflow and guest routing both passed. Actual mobile usage badge/detail layout was inspected; temporary test accounts were deleted by the test flow.

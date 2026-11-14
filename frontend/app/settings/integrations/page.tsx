@@ -4,6 +4,7 @@ import { Plug, KeyRound, ExternalLink } from "lucide-react";
 import { api, type Integration } from "@/components/api";
 import { Button } from "@/components/ui/button";
 import { useRuntime } from "@/components/auth-gate";
+import {UsageAlerts} from "@/components/usage-alerts";
 export default function Integrations() {
   const { hosted } = useRuntime();
   const [filter, setFilter] = useState("All tools");
@@ -191,6 +192,7 @@ export default function Integrations() {
           </section>
         ))}
       </div>
+      <UsageAlerts/>
       {hosted && <details className="panel mt-8">
         <summary>Account</summary>
         <Button variant="outline" onClick={async () => {

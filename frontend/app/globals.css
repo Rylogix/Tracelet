@@ -3562,3 +3562,22 @@ select:focus {
 .public-home-main>.tl-button{padding:13px 24px;border-radius:7px;min-width:170px;min-height:46px}
 .public-home-footnote{color:#666;font-size:10px;margin-top:19px}
 @media(max-width:700px){.public-home-header{height:78px;padding:0 20px}.public-home-header nav{gap:17px;font-size:11px}.public-home-header nav>a:first-child{display:none}.public-home-main{padding:55px 22px 90px}.public-home-main h1{font-size:53px;letter-spacing:-2.8px}.public-home-main>p{font-size:14px;max-width:310px;margin-top:20px}.public-home-tools{gap:7px;max-width:320px;margin-bottom:32px}.public-home-tools>span{padding:8px 10px;font-size:10px}.public-home-label{font-size:9px}.public-home-main>.tl-button{min-width:175px}}
+
+/* Per-lookup usage badges */
+.lookup-usage{margin:17px 0 23px;min-width:0}
+.lookup-usage-badges{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.usage-caption{font-size:10px;color:#777;margin-right:3px}
+.lookup-usage-badge{display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;max-width:100%;min-height:32px;padding:7px 10px;border:1px solid #ffffff1c;border-radius:7px;background:#1b1b1b;color:#c5c5c5;font-family:inherit;font-size:10px;cursor:pointer}
+.lookup-usage-badge:hover,.lookup-usage-badge[aria-expanded="true"]{border-color:#ffffff45;color:#eee}
+.lookup-usage-badge>i{width:4px;height:4px;border-radius:50%;background:#8f8f8f;flex-shrink:0}.lookup-usage-badge.usage-warn>i{background:#c7a563}
+.usage-value{color:#888;font-size:10px}.lookup-usage-badge>svg{color:#777;flex-shrink:0}
+.usage-mini-meter{width:24px;height:3px;background:#ffffff15;border-radius:3px;overflow:hidden;flex-shrink:0}.usage-mini-meter>span{display:block;height:100%;background:#ccc;transition:width .2s ease}
+.usage-inline-panel{margin-top:12px;padding:19px;border:1px solid #ffffff1a;border-radius:9px;background:#191919}
+.usage-panel-heading{display:flex;align-items:center;gap:10px;margin-bottom:15px}.usage-panel-heading>strong{font-size:12px;font-weight:500}.usage-panel-heading>.icon-button{margin-left:auto;width:28px;height:28px}.usage-panel-heading .badge{font-size:9px}
+.usage-inline-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:0 0 16px}.usage-inline-metrics dt{font-size:10px;color:#888;margin-bottom:6px}.usage-inline-metrics dd{font-size:13px;margin:0;overflow-wrap:anywhere}
+.usage-provenance{font-size:10px;color:#888;line-height:1.7;margin:9px 0 0}
+.usage-detail-meter{height:4px;border-radius:3px;background:#ffffff0d;overflow:hidden}.usage-detail-meter>span{height:100%;background:#ccc;display:block}
+.usage-budget-form{display:flex;gap:8px;align-items:center;margin-top:15px}.usage-budget-form input{width:190px;min-width:0;max-width:100%;font-size:11px}.usage-budget-form .tl-button{white-space:nowrap;font-size:11px}
+.usage-source-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px;margin-top:13px}.usage-source-list button{display:flex;align-items:center;gap:8px;min-width:0;text-align:left;padding:11px 0;border:0;border-bottom:1px solid #ffffff0c;background:none;color:#bbb;cursor:pointer;font:inherit;font-size:11px}.usage-source-list button>span:nth-child(2){margin-left:auto;color:#777;font-size:10px}.usage-source-list button:hover{color:white}
+@media(max-width:700px){.lookup-usage{margin-top:14px}.lookup-usage-badge{min-height:36px;padding:8px 9px}.usage-inline-panel{padding:15px}.usage-inline-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.usage-source-list{grid-template-columns:minmax(0,1fr)}.usage-budget-form input{width:100%;flex:1}.usage-caption{width:100%;margin-bottom:1px}}
+@media(prefers-reduced-motion:reduce){.usage-mini-meter>span{transition:none}}

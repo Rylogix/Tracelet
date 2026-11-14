@@ -64,6 +64,27 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(page.getByRole("link",{name:"Get started",exact:true})).toHaveCount(0);
   await page.goto("/login");
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("link",{name:"API usage",exact:true})).toHaveCount(0);
+  expect((await page.request.get("/usage")).status()).toBe(404);
+  await page.getByRole("link",{name:"Website",exact:true}).first().click();
+  await expect(page.getByRole("heading",{name:"Website",exact:true})).toBeVisible();
+  await page.getByRole("button",{name:"DNS lookup usage",exact:true}).click();
+  await expect(page.locator(".usage-inline-metrics").getByText("Unknown",{exact:true}).first()).toBeVisible();
+  await expect(page.locator(".usage-inline-panel").getByRole("meter")).toHaveCount(0);
+  await page.getByLabel("DNS lookup local request budget").fill("10");
+  await page.getByRole("button",{name:"Save budget",exact:true}).click();
+  await expect(page.getByText("Budget saved",{exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toContainText("10 budget left");
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-usage-"+test.info().project.name+".png",fullPage:true});
+  await page.getByRole("link",{name:"Username",exact:true}).click();
+  await expect(page.getByRole("region",{name:"Lookup usage"})).toContainText("sources");
+  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toHaveCount(0);
+  await page.getByRole("button",{name:/sources.*Local tracking/}).click();
+  await expect(page.locator(".usage-source-list").getByRole("button",{name:/GitHub/})).toBeVisible();
+  await page.locator(".usage-source-list").getByRole("button",{name:/GitHub/}).click();
+  await expect(page.locator(".usage-inline-panel strong")).toHaveText("GitHub");
+
   expect(
     (
       await page.request.post("/api/auth/register/verify", {
@@ -76,6 +97,7 @@ test("public passkey signup, private real search, signout and account isolation"
   expect((await page.request.get("/api/footprint")).status()).toBe(404);
   if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-dashboard-"+test.info().project.name+".png",fullPage:true});
   await page.getByRole("link", { name: "Number", exact: true }).click();
+  await expect(page.getByRole("region",{name:"Lookup usage"})).toHaveCount(0);
   await expect(page.getByRole("button", {name:"Search",exact:true})).toBeEnabled();
   await page.keyboard.press("Control+k");
   await expect(page.getByLabel("Search", { exact: true })).toBeFocused();
@@ -241,7 +263,7 @@ test("public passkey signup, private real search, signout and account isolation"
         ".png",
       fullPage: true,
     });
-  for (const route of ["/usage", "/settings/integrations"]) {
+  for (const route of ["/settings/integrations"]) {
     await page.goto(route);
     await expect(page.locator('[aria-current="page"]:visible')).toHaveCount(1);
     expect(

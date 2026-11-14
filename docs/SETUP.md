@@ -16,7 +16,7 @@ Install Docker Desktop (Windows/macOS) or Docker Engine with Compose (Linux). Re
 
 The launcher creates a virtual environment, installs Python and npm dependencies from pinned manifests/lockfiles, builds Next, starts the loopback API/UI, creates SQLite tables/migration versions and a local encryption key, and opens a browser. Review history privacy in the first-run wizard. Available keyless modules are detected automatically. Native optional tools remain disabled pending validation.
 
-Provider key setup is in Settings → Integrations. Paste your own key, connect and test; never paste it into a GitHub issue or commit. Test Connection consumes a real request. Check API Usage for the last successful request and local budget.
+Provider key setup is in Settings → Integrations. Paste your own key, connect and test; never paste it into a GitHub issue or commit. Test Connection consumes a real request. Open a provider’s usage badge on its lookup page for the last successful request and local budget.
 
 Stop with Ctrl+C. Restart with the same launcher. The current launcher performs install/build checks each time; it favors reproducibility over fastest repeated startup. A network connection is needed to initially download dependencies and to perform public lookups. Offline phone and file analysis can work after installation.
 

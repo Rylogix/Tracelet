@@ -11,7 +11,7 @@ A free, open-source OSINT workspace for public information, with real sources an
 - Browser-only image metadata, PDF properties/page dimensions, Office/OpenDocument metadata, file size and SHA-256 analysis. No hosted uploads.
 - Streaming findings with subtle entry animations and reduced-motion support; cancellation, source links, timestamps and confidence labels. Editable report titles, PDF/TXT downloads and clipboard copy.
 - Private report drafts autosave across tabs and reloads. Save to history & clear archives only the selected panels and starts a fresh workspace. API-key encryption and optional integration controls remain available.
-- API usage dashboard with atomic counters, provider headers when present, honest unknown values, retry-after cooldowns and personal budgets.
+- Lookup-page usage badges with atomic counters, provider headers when present, honest unknown values, retry-after cooldowns and personal budgets.
 - Cloudflare: public passkey signup/login, HttpOnly sessions and account-isolated D1 storage. No paid authentication service required.
 - Local: Python/FastAPI, SQLite, auto-generated encryption key, Windows/macOS/Linux launchers and Docker Compose.
 
