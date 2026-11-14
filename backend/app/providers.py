@@ -37,7 +37,7 @@ async def request(
                 "UPDATE usage SET attempts=attempts+1, last_update=? WHERE provider=?",
                 (now(), provider),
             )
-        interval = 15 if provider == "virustotal" else 6 if provider == "rdap" else 2
+        interval = 15 if provider == "virustotal" else 0.5 if provider == "dns" else 6
         await asyncio.sleep(
             max(0, interval - (time.monotonic() - LAST.get(provider, 0)))
         )
@@ -152,7 +152,7 @@ def finding(source, title, value, evidence=None, confidence="high"):
     )
 
 
-async def run_adapter(provider, query, kind):
+async def run_adapter(provider, query, kind, emit=None):
     if provider == "github":
         import re
 
@@ -204,6 +204,11 @@ async def run_adapter(provider, query, kind):
                     international=phonenumbers.format_number(
                         number, phonenumbers.PhoneNumberFormat.INTERNATIONAL
                     ),
+                    e164=phonenumbers.format_number(number,phonenumbers.PhoneNumberFormat.E164),
+                    national=phonenumbers.format_number(number,phonenumbers.PhoneNumberFormat.NATIONAL),
+                    country_calling_code=str(number.country_code),
+                    national_number=str(number.national_number),
+                    type=str(phonenumbers.PhoneNumberType.to_string(phonenumbers.number_type(number))),
                     valid=phonenumbers.is_valid_number(number),
                     possible=phonenumbers.is_possible_number(number),
                     country=phonenumbers.region_code_for_number(number),
@@ -213,46 +218,17 @@ async def run_adapter(provider, query, kind):
                 ),
             )
         ]
-    if provider == "dns":
-        host = query.split("@")[-1] if kind == "email" else query
-        results = []
-        for record in ["A", "AAAA", "MX", "NS", "TXT"]:
-            data = await request(
-                "dns",
-                "https://dns.google/resolve?name="
-                + quote(host, safe="")
-                + "&type="
-                + record,
-            )
-            if data.get("Status") not in (0, 3):
-                raise ValueError("Public DNS resolver could not answer this query.")
-            answers = [item["data"] for item in data.get("Answer", [])]
-            results.append(
-                finding(
-                    "Google Public DNS",
-                    record + " records",
-                    answers
-                    or "No record returned (not evidence of absence elsewhere).",
-                    "https://dns.google/query?name=" + host + "&type=" + record,
-                )
-            )
-        return results
+    if provider in ("dns", "email-security", "network"):
+        from .enrichment import domain_adapter
+        return await domain_adapter(provider, query, kind, emit)
     if provider == "rdap":
+        from .enrichment import rdap_summary
         data = await request("rdap", "https://rdap.org/domain/" + quote(query, safe=""))
         return [
             finding(
                 "RDAP",
                 "Domain registration",
-                {
-                    key: data.get(key)
-                    for key in [
-                        "ldhName",
-                        "status",
-                        "events",
-                        "nameservers",
-                        "entities",
-                    ]
-                },
+                rdap_summary(data),
                 "https://rdap.org/domain/" + query,
             )
         ]

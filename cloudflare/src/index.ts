@@ -4,11 +4,12 @@ import { platforms, scanProfiles, type ProfileCheck } from "./usernames";
 import { auth, owner as identify, json, type AuthEnv } from "./auth";
 import { detect, domain, encrypt } from "./security";
 import { registry } from "./registry";
-import { adapter, type ProviderEnv, type Finding } from "./providers";
+import { adapter, finding, type ProviderEnv, type Finding } from "./providers";
 interface Env extends AuthEnv, ProviderEnv, SherlockEnv {
   ASSETS: Fetcher;
 }
 type Job = {
+  schema_version?: number;
   id: string;
   query: string;
   target: string;
@@ -56,7 +57,7 @@ async function integrations(env: Env, owner: string) {
             ? "Connection test required"
             : "API key required",
       quota_reporting:
-        i.id==='username-discovery'?'Per-platform usage and limits':i.rate === null
+        i.id==='username-discovery'?'Per-platform usage and limits':["email-security","network"].includes(i.id)?'Shared DNS provider limits':i.rate === null
           ? "No external request quota"
           : "Provider headers when available; otherwise unknown",
       timeout_seconds: 25,
@@ -128,6 +129,10 @@ async function runJob(env: Env, owner: string, job: Job) {
     await persist(env, owner, job);
     return;
   }
+  if(job.kind==="email") {
+    job.findings.push(finding("Email","Address components",{address:job.query,local_part:job.query.split("@")[0],domain:job.target,note:"Address syntax and public domain configuration only. No mailbox or account existence is inferred."}));
+    await persist(env,owner,job);
+  }
   const items = await integrations(env, owner);
   const compatible = items.filter((i) =>
     (i.kinds as readonly string[]).includes(job.kind),
@@ -138,6 +143,7 @@ async function runJob(env: Env, owner: string, job: Job) {
     .filter((i) => !i.available)
     .map((i) => ({ name: i.name, reason: i.status }));
   await persist(env, owner, job);
+  const deadline=Date.now()+24000;
   for (const integration of runnable) {
     const current = await env.DB.prepare(
       "SELECT status FROM jobs WHERE id=? AND owner=?",
@@ -146,9 +152,14 @@ async function runJob(env: Env, owner: string, job: Job) {
       .first<{ status: string }>();
     if (!current || current.status === "cancelled") return;
     try {
-      job.findings.push(
-        ...(await adapter(env, owner, integration.id, job.target, job.kind)),
-      );
+      if(Date.now()>deadline-3500)throw new Error("Search time budget reached; this module was not run.");
+      let streamed=false;
+      const results=await adapter(env,owner,integration.id,job.target,job.kind,{
+        deadline,
+        emit:async value=>{streamed=true;job.findings.push(value);await persist(env,owner,job)},
+        cancelled:async()=>{const row=await env.DB.prepare("SELECT status FROM jobs WHERE id=? AND owner=?").bind(job.id,owner).first<{status:string}>();return !row||row.status==="cancelled"},
+      });
+      if(!streamed)job.findings.push(...results);
     } catch (error) {
       job.errors.push({
         source: integration.name,
@@ -414,7 +425,7 @@ async function routes(
         429,
       );
     const cache = await env.DB.prepare(
-      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
+      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND json_extract(payload,'$.schema_version')=2 AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
     )
       .bind(owner, query, kind, Date.now() - 300000)
       .first<{ payload: string }>();
@@ -436,6 +447,7 @@ async function routes(
       return json({ ...cached, cached: true }, 202);
     }
     const job: Job = {
+      schema_version:2,
       id: crypto.randomUUID(),
       query,
       target,

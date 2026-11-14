@@ -10,7 +10,18 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "name"
+    "display": "name",
+    "fields": {
+      "bio": "bio",
+      "website": "blog",
+      "created_at": "created_at",
+      "updated_at": "updated_at",
+      "followers": "followers",
+      "following": "following",
+      "public_repositories": "public_repos",
+      "public_gists": "public_gists",
+      "account_type": "type"
+    }
   },
   {
     "id": "gitlab",
@@ -24,7 +35,13 @@
     "timeout_ms": 4000,
     "safety_per_minute": 10,
     "collection": "",
-    "display": "name"
+    "display": "name",
+    "fields": {
+      "bio": "bio",
+      "website": "website_url",
+      "created_at": "created_at",
+      "account_state": "state"
+    }
   },
   {
     "id": "codeberg",
@@ -37,7 +54,15 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "full_name"
+    "display": "full_name",
+    "fields": {
+      "bio": "description",
+      "website": "website",
+      "created_at": "created",
+      "followers": "followers_count",
+      "following": "following_count",
+      "starred_repositories": "starred_repos_count"
+    }
   },
   {
     "id": "gitea",
@@ -50,7 +75,15 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "full_name"
+    "display": "full_name",
+    "fields": {
+      "bio": "description",
+      "website": "website",
+      "created_at": "created",
+      "followers": "followers_count",
+      "following": "following_count",
+      "starred_repositories": "starred_repos_count"
+    }
   },
   {
     "id": "devto",
@@ -63,7 +96,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "name"
+    "display": "name",
+    "fields": {
+      "bio": "summary",
+      "website": "website_url",
+      "joined": "joined_at",
+      "linked_github": "github_username",
+      "linked_twitter": "twitter_username"
+    }
   },
   {
     "id": "dockerhub",
@@ -76,7 +116,13 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "full_name"
+    "display": "full_name",
+    "fields": {
+      "website": "profile_url",
+      "created_at": "date_joined",
+      "account_type": "type",
+      "company": "company"
+    }
   },
   {
     "id": "huggingface",
@@ -89,7 +135,16 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "fullname"
+    "display": "fullname",
+    "fields": {
+      "created_at": "createdAt",
+      "followers": "numFollowers",
+      "following": "numFollowing",
+      "models": "numModels",
+      "datasets": "numDatasets",
+      "spaces": "numSpaces",
+      "discussions": "numDiscussions"
+    }
   },
   {
     "id": "bluesky",
@@ -104,7 +159,16 @@
     "safety_per_minute": 10,
     "display": "displayName",
     "missing_path": "message",
-    "missing_values": ["Profile not found"]
+    "missing_values": [
+      "Profile not found"
+    ],
+    "fields": {
+      "bio": "description",
+      "created_at": "createdAt",
+      "followers": "followersCount",
+      "following": "followsCount",
+      "posts": "postsCount"
+    }
   },
   {
     "id": "mastodon",
@@ -117,7 +181,15 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "display_name"
+    "display": "display_name",
+    "fields": {
+      "bio": "note",
+      "created_at": "created_at",
+      "followers": "followers_count",
+      "following": "following_count",
+      "posts": "statuses_count",
+      "bot_account": "bot"
+    }
   },
   {
     "id": "infosec",
@@ -130,7 +202,15 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "display_name"
+    "display": "display_name",
+    "fields": {
+      "bio": "note",
+      "created_at": "created_at",
+      "followers": "followers_count",
+      "following": "following_count",
+      "posts": "statuses_count",
+      "bot_account": "bot"
+    }
   },
   {
     "id": "pixelfed",
@@ -145,7 +225,17 @@
     "safety_per_minute": 10,
     "display": "display_name",
     "missing_path": "error",
-    "missing_values": ["Record not found"]
+    "missing_values": [
+      "Record not found"
+    ],
+    "fields": {
+      "bio": "note",
+      "created_at": "created_at",
+      "followers": "followers_count",
+      "following": "following_count",
+      "posts": "statuses_count",
+      "bot_account": "bot"
+    }
   },
   {
     "id": "chess",
@@ -158,7 +248,17 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "name"
+    "display": "name",
+    "fields": {
+      "created_at": {
+        "path": "joined",
+        "format": "unix"
+      },
+      "followers": "followers",
+      "chess_title": "title",
+      "verified_by_platform": "verified",
+      "league": "league"
+    }
   },
   {
     "id": "lichess",
@@ -170,7 +270,18 @@
     "docs": "https://lichess.org/api#tag/Users/operation/apiUser",
     "license": "Provider public API terms",
     "timeout_ms": 4000,
-    "safety_per_minute": 10
+    "safety_per_minute": 10,
+    "fields": {
+      "bio": "profile.bio",
+      "created_at": {
+        "path": "createdAt",
+        "format": "milliseconds"
+      },
+      "games": "count.all",
+      "rated_games": "count.rated",
+      "blitz_rating": "perfs.blitz.rating",
+      "rapid_rating": "perfs.rapid.rating"
+    }
   },
   {
     "id": "hackernews",
@@ -183,7 +294,15 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "null_missing": true
+    "null_missing": true,
+    "fields": {
+      "bio": "about",
+      "created_at": {
+        "path": "created",
+        "format": "unix"
+      },
+      "karma": "karma"
+    }
   },
   {
     "id": "keybase",
@@ -198,7 +317,16 @@
     "safety_per_minute": 10,
     "display": "them.profile.full_name",
     "missing_path": "status.name",
-    "missing_values": ["NOT_FOUND", "USER_NOT_FOUND"]
+    "missing_values": [
+      "NOT_FOUND",
+      "USER_NOT_FOUND"
+    ],
+    "fields": {
+      "created_at": {
+        "path": "them.basics.ctime",
+        "format": "unix"
+      }
+    }
   },
   {
     "id": "scratch",
@@ -210,7 +338,13 @@
     "docs": "https://github.com/scratchfoundation/scratch-rest-api/wiki",
     "license": "Provider public API terms",
     "timeout_ms": 4000,
-    "safety_per_minute": 10
+    "safety_per_minute": 10,
+    "fields": {
+      "bio": "profile.bio",
+      "status_message": "profile.status",
+      "created_at": "history.joined",
+      "scratch_team": "scratchteam"
+    }
   },
   {
     "id": "trello",
@@ -223,7 +357,11 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "fullName"
+    "display": "fullName",
+    "fields": {
+      "bio": "bio",
+      "account_type": "memberType"
+    }
   },
   {
     "id": "discourse",
@@ -236,7 +374,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "user.name"
+    "display": "user.name",
+    "fields": {
+      "bio": "user.bio_raw",
+      "website": "user.website",
+      "created_at": "user.created_at",
+      "badges": "user.badge_count",
+      "profile_views": "user.profile_view_count"
+    }
   },
   {
     "id": "cloudflare",
@@ -249,7 +394,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "user.name"
+    "display": "user.name",
+    "fields": {
+      "bio": "user.bio_raw",
+      "website": "user.website",
+      "created_at": "user.created_at",
+      "badges": "user.badge_count",
+      "profile_views": "user.profile_view_count"
+    }
   },
   {
     "id": "python",
@@ -262,7 +414,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "user.name"
+    "display": "user.name",
+    "fields": {
+      "bio": "user.bio_raw",
+      "website": "user.website",
+      "created_at": "user.created_at",
+      "badges": "user.badge_count",
+      "profile_views": "user.profile_view_count"
+    }
   },
   {
     "id": "freecodecamp",
@@ -275,7 +434,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "user.name"
+    "display": "user.name",
+    "fields": {
+      "bio": "user.bio_raw",
+      "website": "user.website",
+      "created_at": "user.created_at",
+      "badges": "user.badge_count",
+      "profile_views": "user.profile_view_count"
+    }
   },
   {
     "id": "hugo",
@@ -288,7 +454,14 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "user.name"
+    "display": "user.name",
+    "fields": {
+      "bio": "user.bio_raw",
+      "website": "user.website",
+      "created_at": "user.created_at",
+      "badges": "user.badge_count",
+      "profile_views": "user.profile_view_count"
+    }
   },
   {
     "id": "modrinth",
@@ -301,7 +474,12 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "name"
+    "display": "name",
+    "fields": {
+      "bio": "bio",
+      "created_at": "created",
+      "platform_role": "role"
+    }
   },
   {
     "id": "stackoverflow",
@@ -316,7 +494,18 @@
     "safety_per_minute": 10,
     "collection": "items",
     "display": "display_name",
-    "id_path": "user_id"
+    "id_path": "user_id",
+    "fields": {
+      "website": "website_url",
+      "created_at": {
+        "path": "creation_date",
+        "format": "unix"
+      },
+      "reputation": "reputation",
+      "gold_badges": "badge_counts.gold",
+      "silver_badges": "badge_counts.silver",
+      "bronze_badges": "badge_counts.bronze"
+    }
   },
   {
     "id": "wikipedia",
@@ -331,7 +520,13 @@
     "safety_per_minute": 10,
     "normalize_spaces": true,
     "missing_path": "query.users.0.missing",
-    "missing_values": [true]
+    "missing_values": [
+      true
+    ],
+    "fields": {
+      "created_at": "query.users.0.registration",
+      "edits": "query.users.0.editcount"
+    }
   },
   {
     "id": "lemmy",
@@ -344,7 +539,13 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "person_view.person.display_name"
+    "display": "person_view.person.display_name",
+    "fields": {
+      "bio": "person_view.person.bio",
+      "created_at": "person_view.person.published",
+      "posts": "person_view.counts.post_count",
+      "comments": "person_view.counts.comment_count"
+    }
   },
   {
     "id": "peertube",
@@ -357,7 +558,13 @@
     "license": "Provider public API terms",
     "timeout_ms": 4000,
     "safety_per_minute": 10,
-    "display": "displayName"
+    "display": "displayName",
+    "fields": {
+      "bio": "description",
+      "created_at": "createdAt",
+      "followers": "followersCount",
+      "following": "followingCount"
+    }
   },
   {
     "id": "roblox",
@@ -372,12 +579,17 @@
     "safety_per_minute": 10,
     "method": "POST",
     "body": {
-      "usernames": ["{username}"],
+      "usernames": [
+        "{username}"
+      ],
       "excludeBannedUsers": false
     },
     "collection": "data",
     "id_path": "id",
-    "display": "displayName"
+    "display": "displayName",
+    "fields": {
+      "verified_by_platform": "hasVerifiedBadge"
+    }
   },
   {
     "id": "opencollective",
@@ -399,6 +611,8 @@
     },
     "display": "data.account.name",
     "missing_path": "data.account",
-    "missing_values": [null]
+    "missing_values": [
+      null
+    ]
   }
 ]

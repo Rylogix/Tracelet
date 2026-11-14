@@ -32,8 +32,9 @@ REGISTRY = [
         credential=False,
         package="dns",
         docs="https://developers.google.com/speed/public-dns/docs/doh",
-        rate=30,
+        rate=120,
     ),
+    dict(id="email-security",name="Email domain policies",description="Public SPF, DMARC, MTA-STS and TLS reporting records; shared DNS budget.",kinds=["email"],license="Google Public DNS terms",credential=False,docs="https://developers.google.com/speed/public-dns/docs/doh",rate=None),
     dict(
         id="rdap",
         name="RDAP",
@@ -44,6 +45,7 @@ REGISTRY = [
         docs="https://about.rdap.org/",
         rate=10,
     ),
+    dict(id="network",name="Public network",description="Public IP, prefix and ASN via Team Cymru DNS; shared DNS budget.",kinds=["website"],license="Team Cymru service / Google Public DNS terms",credential=False,docs="https://www.team-cymru.com/ip-asn-mapping",rate=None),
     dict(
         id="phone",
         name="libphonenumber",
@@ -187,7 +189,7 @@ def integrations(include_platforms=False):
                 else "Connection test required"
                 if not validated
                 else "Not installed",
-                "quota_reporting": "Response headers when supplied; otherwise unknown"
+                "quota_reporting": "Shared DNS provider limits" if item["id"] in ("email-security","network") else "Response headers when supplied; otherwise unknown"
                 if item["credential"]
                 else "Local request counts; allowance unknown"
                 if item["rate"]

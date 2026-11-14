@@ -15,9 +15,13 @@ export const registry = [
     description: "Public DNS records via Google Public DNS over HTTPS.",
     kinds: ["website", "email"],
     credential: false,
-    rate: 30,
+    rate: 120,
     docs: "https://developers.google.com/speed/public-dns/docs/doh",
     license: "Google Public DNS terms",
+  },
+  {
+    id: "email-security", name:"Email domain policies", description:"Public SPF, DMARC, MTA-STS and TLS reporting records. Uses the shared DNS request budget.",
+    kinds:["email"],credential:false,rate:null,docs:"https://developers.google.com/speed/public-dns/docs/doh",license:"Google Public DNS terms",
   },
   {
     id: "rdap",
@@ -28,6 +32,10 @@ export const registry = [
     rate: 10,
     docs: "https://www.iana.org/assignments/rdap-dns/rdap-dns.xhtml",
     license: "Registry-specific terms",
+  },
+  {
+    id:"network",name:"Public network",description:"Public IP, routing prefix and ASN via Team Cymru DNS. Uses shared DNS request budget.",
+    kinds:["website"],credential:false,rate:null,docs:"https://www.team-cymru.com/ip-asn-mapping",license:"Team Cymru service / Google Public DNS terms",
   },
   {
     id: "phone",

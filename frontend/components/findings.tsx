@@ -1,3 +1,4 @@
+import type {CSSProperties} from "react";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -31,65 +32,30 @@ function text(value: unknown, key = ""): string {
   }
   return String(value);
 }
-function Value({ value, depth = 0 }: { value: unknown; depth?: number }) {
-  if (value === null || typeof value !== "object")
-    return <span className="finding-text">{text(value)}</span>;
-  if (Array.isArray(value)) {
-    if (!value.length)
-      return <span className="muted">No records returned</span>;
-    if (value.every((v) => typeof v !== "object" || v === null))
-      return (
-        <ul className="finding-list">
-          {value.map((v, i) => (
-            <li key={i}>{text(v)}</li>
-          ))}
-        </ul>
-      );
-    return (
-      <span className="finding-text">
-        {value.length} {value.length === 1 ? "record" : "records"} available in
-        source data
-      </span>
-    );
+function Scalar({value,name=""}:{value:unknown;name?:string}) {
+  const content=text(value,name);
+  if(typeof value==="string" && /^https?:\/\/[^\s]+$/i.test(value))return <a className="finding-link" href={value} target="_blank" rel="noreferrer">{content}<ArrowUpRight size={11}/></a>;
+  return <span className="finding-text">{content}</span>;
+}
+function Value({value,depth=0}:{value:unknown;depth?:number}) {
+  if(value===null || typeof value!=="object")return <Scalar value={value}/>;
+  if(depth>4)return <pre className="nested-json">{JSON.stringify(value,null,2)}</pre>;
+  if(Array.isArray(value)){
+    if(!value.length)return <span className="muted">No records returned</span>;
+    const primitive=value.every(v=>typeof v!=="object"||v===null);
+    const render=(items:unknown[],offset=0)=>primitive?<ul className="finding-list">{items.map((v,i)=><li key={i+offset}><Scalar value={v}/></li>)}</ul>:<div className="nested-records">{items.map((v,i)=><div className="nested-record" key={i+offset}><Value value={v} depth={depth+1}/></div>)}</div>;
+    return <>{render(value.slice(0,10))}{value.length>10&&<details className="additional-values"><summary>View {value.length-10} more records</summary>{render(value.slice(10),10)}</details>}</>;
   }
-  const entries = Object.entries(value as Record<string, unknown>).filter(
-    ([k, v]) => k !== "note" && v !== null && v !== undefined,
-  );
-  if (!entries.length)
-    return <span className="muted">No additional properties returned</span>;
-  return (
-    <dl className="finding-properties">
-      {entries.slice(0, depth ? 6 : 10).map(([key, v]) => (
-        <div
-          key={key}
-          className={
-            (typeof v === "object" && v !== null) || key === "note"
-              ? "property-wide"
-              : ""
-          }
-        >
-          <dt>{label(key)}</dt>
-          <dd>
-            {typeof v === "object" && v !== null ? (
-              depth < 1 ? (
-                <Value value={v} depth={depth + 1} />
-              ) : (
-                <span>See source data</span>
-              )
-            ) : (
-              text(v, key)
-            )}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
+  const entries=Object.entries(value as Record<string,unknown>).filter(([k,v])=>k!=="note"&&v!==null&&v!==undefined);
+  if(!entries.length)return <span className="muted">No additional properties returned</span>;
+  return <dl className="finding-properties">{entries.map(([key,v])=><div key={key} className={typeof v==="object"&&v!==null || ["bio","description","website","note"].includes(key) || typeof v==="string"&&v.length>65?"property-wide":""}><dt>{label(key)}</dt><dd>{typeof v==="object"&&v!==null?<Value value={v} depth={depth+1}/>:<Scalar value={v} name={key}/>}</dd></div>)}</dl>;
 }
 export function Findings({ items }: { items: Finding[] }) {
   return (
     <div className="results">
+      <span className="sr-only" aria-live="polite">{items.length} findings</span>
       {items.map((item, i) => (
-        <article className="finding-card" key={i}>
+        <article className="finding-card" key={[item.source,item.title,item.evidence,item.observed_at].join("|")} style={{"--arrival-delay":Math.min(i,5)*25+"ms"} as CSSProperties}>
           <div className="finding-source">
             <span>
               <Link2 size={13} />

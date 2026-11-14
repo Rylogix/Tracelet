@@ -259,3 +259,21 @@ def test_invalid_and_running_reports(client):
     running = {'id': 'running', 'included': True, 'job': {'id': 'running', 'query': 'alice', 'kind': 'username', 'status': 'running', 'findings': [], 'notes': [], 'errors': [], 'unavailable': []}}
     saved = client.put('/api/workspace', json={**draft, 'entries': [running]}, headers=HEADERS).json()
     assert client.post('/api/reports/archive', json={'id': draft['id'], 'revision': saved['revision']}, headers=HEADERS).status_code == 422
+
+
+def test_richer_profile_fields_are_observed_and_not_contact_dumped():
+    from app.usernames import PLATFORMS, interpret
+    site = next(s for s in PLATFORMS if s['id'] == 'github')
+    result = interpret(site, 'fixture', 200, {'login': 'fixture', 'bio': '<p>Public project</p>', 'public_repos': 7, 'followers': 0, 'email': 'do-not-copy@example.com'})
+    value = result['finding']['value']
+    assert value['bio'] == 'Public project'
+    assert value['public_repositories'] == 7 and value['followers'] == 0
+    assert 'email' not in value and 'created_at' not in value
+
+
+def test_rdap_summary_omits_registrant_contacts():
+    from app.enrichment import rdap_summary
+    value = rdap_summary({'ldhName': 'EXAMPLE.COM', 'events': [{'eventAction': 'registration', 'eventDate': '2000-01-01'}], 'entities': [{'roles': ['registrant'], 'vcardArray': ['vcard', [['fn', {}, 'text', 'Private Person']]]}]})
+    assert value['registered'] == '2000-01-01'
+    assert 'Private Person' not in json.dumps(value)
+    assert 'expires' not in value

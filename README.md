@@ -7,9 +7,9 @@ A free, open-source OSINT workspace for public information, with real sources an
 ## What works
 
 - Dashboard → Username, Email, Number, Files, Website → Report workflow. Each search stays in its source tab and adds its own removable report panel.
-- Public username checks across 29 platforms, DNS-over-HTTPS, RDAP domain registration, and offline phone validation.
-- Browser-only image metadata, PDF properties, file size and SHA-256 analysis. No hosted uploads.
-- Background searches, live progress, cancellation, source links, timestamps and confidence labels. Editable report titles, PDF/TXT downloads and clipboard copy.
+- Public username checks across 29 platforms with available bios, websites, dates and public counts. Expanded DNS, readable RDAP registration, public ASN/prefix mapping, email-domain authentication policies and offline number details.
+- Browser-only image metadata, PDF properties/page dimensions, Office/OpenDocument metadata, file size and SHA-256 analysis. No hosted uploads.
+- Streaming findings with subtle entry animations and reduced-motion support; cancellation, source links, timestamps and confidence labels. Editable report titles, PDF/TXT downloads and clipboard copy.
 - Private report drafts autosave across tabs and reloads. Save to history & clear archives only the selected panels and starts a fresh workspace. API-key encryption and optional integration controls remain available.
 - API usage dashboard with atomic counters, provider headers when present, honest unknown values, retry-after cooldowns and personal budgets.
 - Cloudflare: public passkey signup/login, HttpOnly sessions and account-isolated D1 storage. No paid authentication service required.

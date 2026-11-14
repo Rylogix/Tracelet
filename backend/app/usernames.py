@@ -2,6 +2,7 @@ import asyncio
 import json
 import re
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 from .db import connect
@@ -98,6 +99,17 @@ def interpret(site, target, status, data):
     value = {"username": identity}
     if isinstance(display, str) and display.strip():
         value["name"] = display.strip()[:200]
+    for name, spec in site.get("fields", {}).items():
+        item = field(account, spec if isinstance(spec,str) else spec["path"])
+        if isinstance(spec,dict) and isinstance(item,(int,float)):
+            try:
+                item = datetime.fromtimestamp(item if spec["format"]=="unix" else item/1000,timezone.utc).isoformat().replace("+00:00","Z")
+            except (ValueError,OverflowError,OSError):
+                item = None
+        if isinstance(item,str):
+            item = re.sub(r"\s+"," ",re.sub(r"<[^>]*>"," ",item)).strip()[:1600]
+        if item != "" and isinstance(item,(str,int,float,bool)):
+            value[name] = item
     return {
         **base,
         "status": "found",
@@ -113,7 +125,7 @@ async def check_profile(site, target):
     with connect() as db:
         cached = db.execute(
             "SELECT payload FROM provider_cache WHERE provider=? AND query=? AND expires>?",
-            (site["id"], target, time.time()),
+            (site["id"], "v2:"+target, time.time()),
         ).fetchone()
     if cached:
         return {**json.loads(cached[0]), "cached": True}
@@ -144,7 +156,7 @@ async def check_profile(site, target):
             with connect() as db:
                 db.execute(
                     "INSERT OR REPLACE INTO provider_cache VALUES(?,?,?,?)",
-                    (site["id"], target, json.dumps(check), time.time() + 300),
+                    (site["id"], "v2:"+target, json.dumps(check), time.time() + 300),
                 )
         return check
     except Exception as exc:

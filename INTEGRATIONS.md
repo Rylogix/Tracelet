@@ -5,11 +5,14 @@ Registry declarations live in `backend/app/registry.py` and `cloudflare/src/regi
 | Integration | Hosted | Local | Requirements / terms |
 |---|---|---|---|
 | Username discovery (29 platforms) | Implemented | Implemented | Public APIs; exact handle confirmation; possible matches only |
-| DNS | Implemented | Implemented | Official Google Public DNS HTTPS API; Google's service/privacy terms apply |
+| DNS | Implemented | Implemented | Google Public DNS HTTPS API; A, AAAA, CNAME, MX, NS, TXT, CAA, SOA; TTL and DNSSEC validation flags |
+| Email domain policies | Implemented | Implemented | SPF/DMARC, MTA-STS and TLS reporting DNS records; shared DNS budget; no mailbox/account enumeration |
+| Public network | Implemented | Implemented | Team Cymru public IP-to-ASN DNS service via Google DNS; one public IPv4 sample, routing prefix, registry and ASN name |
 | RDAP | Implemented | Implemented | IANA bootstrap + registry endpoint (hosted); RDAP.org bootstrap (local); registry-specific data restrictions |
 | libphonenumber | Implemented | Implemented | JS MIT wrapper / Apache-2.0 metadata; Python port Apache-2.0; offline data |
 | Image metadata | Browser exifr | Browser exifr + backend Pillow | exifr MIT; Pillow HPND; untrusted metadata |
-| PDF properties | Browser pdf-lib | Browser pdf-lib + backend pypdf | MIT / BSD-3-Clause; no scripts/macros executed |
+| PDF properties | Browser pdf-lib | Browser pdf-lib + backend pypdf | MIT / BSD-3-Clause; title, author, dates, page sizes/rotations; no scripts/macros executed |
+| Office/OpenDocument metadata | Browser fflate | Browser fflate | MIT; bounded ZIP metadata extraction only; macros and document contents are not executed |
 | ExifTool | Unavailable | Disabled pending native validation | Artistic/GPL dual terms; native executable installation |
 | Sherlock | Container adapter prepared; account plan blocks deployment | Disabled pending native integration | MIT; see [Cloudflare setup](cloudflare/sherlock/README.md) |
 | Maigret | Unavailable | Disabled pending compatibility tests | MIT; broad enumeration must be carefully scoped |
@@ -29,3 +32,11 @@ No license or current maintenance claim is made for backlog entries. Review upst
 The shared catalog in `backend/app/username_platforms.json` declares endpoints, official documentation, terms, response identity fields, timeouts and safety rates. Platforms: GitHub, GitLab, Codeberg, Gitea, DEV, Docker Hub, Hugging Face, Bluesky, Mastodon.social, Infosec.exchange, Pixelfed.social, Chess.com, Lichess, Hacker News, Keybase, Scratch, Trello, Discourse Meta, Cloudflare Community, Python Discourse, freeCodeCamp, Hugo, Modrinth, Stack Overflow, Wikipedia, Lemmy.world, Framatube, Roblox and Open Collective. Federated services check the named instance only.
 
 Six checks run concurrently. Only exact public API identities produce findings. Missing profiles, blocked requests, rate limits and malformed responses are distinct states. Results are cached privately for five minutes; cancellation prevents new checks and in-flight calls have four-second timeouts. All matches are possible matches, never identity proof. Sherlock has an optional private Cloudflare Container adapter; deployment requires Workers Paid and is currently disabled. Maigret remains unavailable. MIT attribution for Sherlock test references is included in `backend/app/third-party/`.
+
+## Richer observations
+
+Public username response fields are explicitly allowlisted in the shared catalog: bios, declared websites, creation dates, public activity totals, reputation and platform badges where returned. Missing fields stay missing; no extra profile requests or contact dumps are made. Profile bios are bounded to 1,600 characters and all handle matches remain low-confidence possible matches. Phone results expose numbering-plan facts, not subscriber identity, live carrier or assignment status.
+
+RDAP presents registrar name/ID, registration/expiration/change dates, nameservers and signed-delegation status without displaying registrant contact cards. Network routing uses only an already-resolved public IPv4 and Team Cymru's documented DNS names; it is not physical geolocation or proof of website ownership. RIPEstat was evaluated but not enabled because its redistribution terms do not fit exported reports.
+
+DNS records stream individually. Eligible answers respect positive/negative DNS TTLs, capped at five minutes. Hosted website/email tasks have a 24-second orchestration budget with checkpoints and cooperative cancellation; time-limited tasks retain actual observations and report omitted checks as unavailable. Browser document parsing allows only exact metadata paths, caps extracted XML at 256 KiB per entry, processes compressed input in small chunks and does not expand XML entities or access external resources. The existing 10 MiB upload and 12-second worker limits remain.

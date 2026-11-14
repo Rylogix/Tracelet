@@ -1,5 +1,6 @@
 import * as exifr from "exifr";
 import { PDFDocument } from "pdf-lib";
+import { documentMetadata } from "./document-metadata";
 self.onmessage = async (
   event: MessageEvent<{ buffer: ArrayBuffer; name: string; type: string }>,
 ) => {
@@ -31,6 +32,10 @@ self.onmessage = async (
         creator: pdf.getCreator(),
         producer: pdf.getProducer(),
         creation_date: pdf.getCreationDate()?.toISOString(),
+        modification_date:pdf.getModificationDate()?.toISOString(),
+        subject:pdf.getSubject(),
+        keywords:pdf.getKeywords(),
+        page_dimensions:pdf.getPages().slice(0,100).map((p,i)=>({page:i+1,width_points:p.getWidth(),height_points:p.getHeight(),rotation:p.getRotation().angle})),
       });
       source = "pdf-lib";
       title = "PDF properties";
@@ -46,10 +51,14 @@ self.onmessage = async (
         .catch(() => null);
       value.metadata = metadata || "No supported metadata found";
       const bitmap = await createImageBitmap(new Blob([buffer]));
-      Object.assign(value, { width: bitmap.width, height: bitmap.height });
+      Object.assign(value, { width: bitmap.width, height: bitmap.height,megapixels:Number((bitmap.width*bitmap.height/1000000).toFixed(2)),aspect_ratio:Number((bitmap.width/bitmap.height).toFixed(3)) });
       bitmap.close();
       source = "exifr / browser";
       title = "Image properties";
+    } else if(bytes[0]===0x50&&bytes[1]===0x4b&&bytes[2]===3&&bytes[3]===4) {
+      const metadata=documentMetadata(bytes);
+      value.document_metadata=Object.keys(metadata).length?metadata:"No supported document metadata found";
+      source="Document package";title="Document properties";
     } else {
       value.note =
         "Only file size and SHA-256 are supported for this format. No document contents or video metadata are inferred.";

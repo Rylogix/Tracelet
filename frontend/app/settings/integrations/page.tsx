@@ -175,7 +175,7 @@ export default function Integrations() {
                             .last_success!,
                         ).toLocaleString()
                       : "Not recorded")
-                  : i.id==='username-discovery'?'Limits tracked per site':"No external API quota"}
+                  : i.id==='username-discovery'?'Limits tracked per site':["email-security","network"].includes(i.id)?'Shared DNS provider limits':"No external API quota"}
               </p>
               <div className="actions">
                 <a href={i.docs} target="_blank" rel="noreferrer">

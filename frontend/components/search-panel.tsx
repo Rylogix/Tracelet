@@ -12,7 +12,7 @@ export function EntryPanel({entry,report=false,readOnly=false}:{entry:Entry;repo
   const {include,cancel}=useWorkflow();const [expanded,setExpanded]=useState(false);const [error,setError]=useState("");
   const job=entry.job;const active=["queued","running"].includes(job.status);
   const label=kinds.find(k=>k.id===job.kind)?.label||job.kind;
-  return <section className="panel workflow-entry" aria-label={label+" search: "+job.query}>
+  return <section className="panel workflow-entry result-arrival" aria-label={label+" search: "+job.query}>
     <div className="entry-heading"><div><span className="entry-kind">{label}</span><h2>{job.query}</h2>
       <span className="entry-meta">{job.findings.length} {job.kind==="username"?"possible matches":"findings"}<span>·</span><span className={active?"badge":""}>{job.status}</span></span>
     </div><div className="actions">
@@ -24,6 +24,7 @@ export function EntryPanel({entry,report=false,readOnly=false}:{entry:Entry;repo
     </div></div>
     {active && job.total>0 && <div className="job-progress" role="progressbar" aria-label="Investigation progress" aria-valuenow={job.completed} aria-valuemax={job.total}><span style={{width:Math.min(100,job.completed/job.total*100)+"%"}}/></div>}
     {error && <p role="alert" className="error">{error}</p>}
+    {active && !job.findings.length && <div className="finding-skeleton" aria-label="Searching sources"><span/><span/><span/></div>}
     <Findings items={expanded?job.findings:job.findings.slice(0,4)}/>
     {job.findings.length>4 && <button className="text-action" onClick={()=>setExpanded(!expanded)}>{expanded?"Show less":`View all ${job.findings.length} findings`}</button>}
     {!active && !job.findings.length && <div className="entry-empty">No findings.</div>}

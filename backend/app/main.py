@@ -115,6 +115,8 @@ async def execute(job):
                 save(job)
                 TASKS.pop(job["id"], None)
             return
+        if job["kind"] == "email":
+            job["findings"].append(finding("Email","Address components",{"address":job["query"],"local_part":job["query"].split("@")[0],"domain":job["target"],"note":"Address syntax and public domain configuration only. No mailbox or account existence is inferred."}))
         available = [i for i in integrations() if job["kind"] in i["kinds"]]
         providers = [
             i
@@ -136,10 +138,17 @@ async def execute(job):
             )
 
         async def one(item):
+            streamed=False
+            async def emit(value):
+                nonlocal streamed
+                streamed=True
+                job["findings"].append(value)
+                save(job)
             try:
                 async with asyncio.timeout(75):
-                    results = await run_adapter(item["id"], job["target"], job["kind"])
-                job["findings"].extend(results)
+                    results = await run_adapter(item["id"], job["target"], job["kind"], emit)
+                if not streamed:
+                    job["findings"].extend(results)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -151,7 +160,8 @@ async def execute(job):
 
         job["total"] = len(providers)
         try:
-            await asyncio.gather(*(one(i) for i in providers))
+            for provider in providers:
+                await one(provider)
             job["status"] = "completed" if not job["errors"] else "partial"
         except asyncio.CancelledError:
             job["status"] = "cancelled"

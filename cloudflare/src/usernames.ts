@@ -26,6 +26,7 @@ export interface Platform {
   missing_values?: unknown[];
   null_missing?: boolean;
   normalize_spaces?: boolean;
+  fields?: Record<string,string|{path:string;format:string}>;
 }
 export const platforms = rawPlatforms as Platform[];
 export interface ProfileCheck {
@@ -114,6 +115,16 @@ export function interpret(
     return { ...base, status: "unavailable", reason: "Invalid profile ID" };
   const url = format(site.url, { ...v, id: String(rawId) });
   const display = site.display ? field(account, site.display) : null;
+  const details: Record<string,unknown> = {};
+  for(const [name,spec] of Object.entries(site.fields||{})) {
+    let value = field(account,typeof spec==="string"?spec:spec.path);
+    if(typeof spec!=="string" && typeof value==="number" && Number.isFinite(value)) {
+      const date=new Date(spec.format==="unix"?value*1000:value);
+      value=Number.isFinite(date.getTime())?date.toISOString():undefined;
+    }
+    if(typeof value==="string")value=value.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,1600);
+    if(value!=="" && (typeof value==="string"||typeof value==="boolean"||typeof value==="number"&&Number.isFinite(value)))details[name]=value;
+  }
   return {
     ...base,
     status: "found",
@@ -126,6 +137,7 @@ export function interpret(
         ...(typeof display === "string" && display.trim()
           ? { name: display.trim().slice(0, 200) }
           : {}),
+        ...details,
       },
       url,
       "low",
@@ -148,7 +160,7 @@ export async function checkProfile(
   const cached = await env.DB.prepare(
     "SELECT payload FROM provider_cache WHERE owner=? AND provider=? AND query=? AND expires>?",
   )
-    .bind(owner, site.id, target, Date.now())
+    .bind(owner, site.id, "v2:"+target, Date.now())
     .first<{ payload: string }>();
   if (cached) return { ...JSON.parse(cached.payload), cached: true };
   try {
@@ -180,7 +192,7 @@ export async function checkProfile(
         .bind(
           owner,
           site.id,
-          target,
+          "v2:"+target,
           JSON.stringify(check),
           Date.now() + 300000,
         )

@@ -1,3 +1,4 @@
+import {zipSync,strToU8} from "fflate";
 import { readFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { test, expect, type Page } from "@playwright/test";
@@ -74,6 +75,13 @@ test("public passkey signup, private real search, signout and account isolation"
     timeout: 20000,
   });
   await expect(page.getByText("United Kingdom", { exact: true })).toBeVisible();
+  await expect(page.getByText("E164",{exact:true})).toBeVisible();
+  const card=page.locator(".finding-card").first();
+  expect(await card.evaluate(e=>getComputedStyle(e).animationName)).toBe("evidence-arrive");
+  await page.emulateMedia({reducedMotion:"reduce"});
+  expect(await card.evaluate(e=>getComputedStyle(e).animationName)).toBe("none");
+  await page.emulateMedia({reducedMotion:"no-preference"});
+
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
@@ -259,6 +267,16 @@ test("public passkey signup, private real search, signout and account isolation"
     ).status(),
   ).toBe(200);
 });
+test("office document metadata stays in the browser",async({page})=>{
+ await passkey(page);await page.goto("/");await page.getByRole("button",{name:"Create account",exact:true}).click();await page.getByLabel("Username",{exact:true}).fill("office-"+Date.now());await page.getByRole("button",{name:"Create account",exact:true}).click();await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible();
+ await page.getByRole("link",{name:"Files",exact:true}).click();
+ const bytes=zipSync({'docProps/core.xml':strToU8('<cp:coreProperties><dc:title>Document fixture</dc:title><dc:creator>Test author</dc:creator></cp:coreProperties>'),'docProps/app.xml':strToU8('<Properties><Application>Test editor</Application><Words>123</Words></Properties>')});
+ const uploads:string[]=[];page.on('request',r=>{if(r.url().includes('/api/files'))uploads.push(r.url())});
+ await page.getByLabel("Upload file for local analysis").setInputFiles({name:"fixture.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from(bytes)});
+ await expect(page.getByText("Document properties",{exact:true})).toBeVisible();await expect(page.getByText("Test author",{exact:true})).toBeVisible();await expect(page.getByText("Test editor",{exact:true})).toBeVisible();expect(uploads).toEqual([]);
+ await page.request.delete('/api/account',{headers:{'X-Tracelet-Client':'local-ui'}});
+});
+
 test("rejects unauthenticated mutations and cross-origin calls", async ({
   request,
 }) => {
@@ -317,16 +335,24 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     return value;
   }
   const job=await searchTab("Website","example.com");
+  expect(job.findings.filter((f:{source:string})=>f.source==="Google Public DNS")).toHaveLength(8);
+  expect(job.findings.some((f:{source:string})=>f.source==="Team Cymru DNS")).toBe(true);
+  expect(job.findings.find((f:{source:string})=>f.source==="RDAP").value.registered).toBeTruthy();
+  const mail=await searchTab("Email","tracelet-fixture@gmail.com");
+  expect(mail.findings.some((f:{title:string,value:any})=>f.title==="SPF & DMARC"&&f.value.dmarc_records.length>0)).toBe(true);
+
   const scan=await searchTab("Username","octocat");
   expect(scan.total).toBe(29);expect(scan.checks).toHaveLength(29);
   expect(scan.findings.length).toBeGreaterThan(0);
+  expect(scan.findings.some((f:{value:any})=>f.value.bio||f.value.created_at||typeof f.value.followers==='number')).toBe(true);
   const github=scan.checks.find((c:{provider:string})=>c.provider==="github");
   expect(["found","unavailable"]).toContain(github.status);
   console.info("Live username checks:",scan.findings.length,"matches; GitHub:",github.status,github.reason||"");
   await searchTab("Username","torvalds");
   await expect(page.locator(".workflow-entry")).toHaveCount(2);
   await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(3);
+  await expect(page.locator(".workflow-entry")).toHaveCount(4);
+  await page.getByRole("button",{name:"Remove tracelet-fixture@gmail.com from report",exact:true}).click();
   await page.getByRole("button",{name:"Remove torvalds from report",exact:true}).click();
   await page.getByRole("button",{name:"Remove example.com from report",exact:true}).click();
   await expect(page.locator(".workflow-entry")).toHaveCount(1);

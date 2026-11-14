@@ -1,3 +1,4 @@
+import type {AdapterOptions} from "./enrichment";
 import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { decrypt, githubHandle } from "./security";
 export interface ProviderEnv {
@@ -27,7 +28,7 @@ export const finding = (
   observed_at: new Date().toISOString(),
 });
 const intervals: Record<string, number> = {
-  dns: 2000,
+  dns: 500,
   rdap: 6000,
   github: 6000,
   virustotal: 15000,
@@ -62,6 +63,9 @@ export async function external(
   )
     .bind(owner, provider)
     .run();
+  const allowance=await env.DB.prepare("SELECT attempts,budget,remaining,reset,blocked_until FROM usage WHERE owner=? AND provider=?").bind(owner,provider).first<{attempts:number;budget:number|null;remaining:number|null;reset:string|null;blocked_until:number}>();
+  if(allowance && (allowance.budget!==null&&allowance.attempts>=allowance.budget || allowance.blocked_until>time || allowance.remaining!==null&&allowance.remaining<=0&&(!allowance.reset||allowance.reset>new Date(time).toISOString())))
+    throw new Error("Provider is exhausted, cooling down, or at your personal budget.");
   await env.DB.prepare(
     "INSERT OR IGNORE INTO provider_locks(provider) VALUES(?)",
   )
@@ -262,6 +266,7 @@ export async function adapter(
   provider: string,
   target: string,
   kind: string,
+  options:AdapterOptions = {},
 ): Promise<Finding[]> {
   if (provider === "phone") {
     const phone = parsePhoneNumberFromString(target);
@@ -272,6 +277,12 @@ export async function adapter(
     return [
       finding("libphonenumber", "Number format", {
         international: phone.formatInternational(),
+        e164:phone.number,
+        national:phone.formatNational(),
+        country_calling_code:phone.countryCallingCode,
+        national_number:phone.nationalNumber,
+        ...(phone.ext?{extension:phone.ext}:{}),
+        non_geographic:phone.isNonGeographic(),
         valid: phone.isValid(),
         possible: phone.isPossible(),
         country: phone.country ?? "Unknown",
@@ -310,31 +321,9 @@ export async function adapter(
       ),
     ];
   }
-  if (provider === "dns") {
-    const results: Finding[] = [];
-    for (const [i, type] of ["A", "AAAA", "MX", "NS", "TXT"].entries()) {
-      if (i) await new Promise((r) => setTimeout(r, 2050));
-      const url =
-        "https://dns.google/resolve?name=" +
-        encodeURIComponent(target) +
-        "&type=" +
-        type;
-      const data = await external(env, owner, provider, url);
-      if (![0, 3].includes(data.Status))
-        throw new Error("Public DNS resolver could not answer this query.");
-      results.push(
-        finding(
-          "Google Public DNS",
-          type + " records",
-          data.Answer?.map((a: { data: string }) => a.data) ?? [],
-          "https://dns.google/query?name=" +
-            encodeURIComponent(target) +
-            "&type=" +
-            type,
-        ),
-      );
-    }
-    return results;
+  if (["dns","email-security","network"].includes(provider)) {
+    const {domainAdapter}=await import("./enrichment");
+    return domainAdapter(env,owner,provider,target,kind,options);
   }
   if (provider === "rdap") {
     const url = await rdapEndpoint(target);
@@ -343,11 +332,7 @@ export async function adapter(
       finding(
         "RDAP",
         "Domain registration",
-        Object.fromEntries(
-          ["ldhName", "status", "events", "nameservers", "entities"].map(
-            (k) => [k, data[k] ?? null],
-          ),
-        ),
+        (await import("./enrichment")).rdapSummary(data),
         url,
       ),
     ];
