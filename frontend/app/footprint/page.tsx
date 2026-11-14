@@ -45,23 +45,7 @@ export default function Footprint() {
   }
   return (
     <>
-      <div className="eyebrow">
-        <Fingerprint size={14} /> ACCOUNTS
-      </div>
       <h1>My digital footprint</h1>
-      <p className="subtitle">
-        A private collection of accounts you own.{" "}
-        {hosted ? "Isolated to your account." : "Stored on this machine."}
-      </p>
-      <div className="notice">
-        Prove control of a GitHub account by adding a temporary token to its
-        public bio. Only verified accounts can be monitored. Monitoring is off
-        by default, checks no more than daily, and{" "}
-        {hosted
-          ? "runs on Cloudflare’s hourly scheduler."
-          : "runs while your local app is open."}{" "}
-        Matching usernames are never proof of identity.
-      </div>
       <form
         className="profile-form"
         onSubmit={async (e) => {
@@ -165,7 +149,7 @@ export default function Footprint() {
                   disabled={busy}
                   onClick={() => action(i.id, "challenge")}
                 >
-                  Generate ownership token
+                  Verify account
                 </Button>
                 {i.challenge && (
                   <>
@@ -173,8 +157,7 @@ export default function Footprint() {
                       {i.challenge}
                     </code>
                     <p className="muted text-xs">
-                      Add this token to your public GitHub bio, then verify. You
-                      can remove it after verification.
+                      Add this to your GitHub bio, then verify.
                     </p>
                     <Button
                       size="sm"
@@ -211,17 +194,14 @@ export default function Footprint() {
       ) : (
         <div className="empty">
           <Fingerprint size={26} />
-          <strong>No accounts added</strong>Add a public account you own to keep
-          it organized.
+          <strong>No accounts added</strong>
         </div>
       )}
       {hosted && (
         <section className="panel mt-8">
           <h2>Delete my Tracelet account</h2>
           <p className="muted text-xs">
-            Permanently remove your credentials, searches, profiles, and sign-in
-            data from the application. This cannot be undone. Cloudflare backups
-            may retain data according to the operator’s retention policy.
+            Permanently removes your account and saved data.
           </p>
           <Button
             variant="outline"

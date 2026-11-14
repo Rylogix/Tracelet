@@ -20,3 +20,5 @@ Percentage alerts use provider limit and remaining only, at 50%, 80%, 90%, 100%.
 No credit-metered adapter or official usage-account endpoint is enabled in this version. The registry and UI must not pretend that generic response headers cover provider-specific endpoint billing, credit costs, separate endpoint buckets, or shared personal accounts. Those adapters require provider-specific tests before release.
 
 Cloudflare infrastructure usage is governed by your Cloudflare account and current plan; inspect the Cloudflare dashboard. Tracelet does not claim to meter all Workers/D1 account-wide usage. Check current official pricing and configure operator controls before public launch.
+
+Username adapters each have a local safety limit of 10 requests/minute, an independent personal budget and request counters. Stack Overflow reports official quota_max/quota_remaining and backoff in JSON; other adapters use available response headers, otherwise their allowance remains unknown. Cache hits make no external request. Public API availability varies by network and provider; failures are displayed as unavailable, never as absence.

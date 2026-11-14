@@ -40,25 +40,9 @@ export default function Usage() {
   }, []);
   return (
     <>
-      <div className="eyebrow">
-        <Activity size={13} /> USAGE & LIMITS
-      </div>
       <h1>API usage</h1>
-      <p className="subtitle">
-        Track requests, provider limits, and personal budgets.
-      </p>
-      <div className="notice">
-        Local attempts include failures. Provider allowances and reset dates
-        appear only when confirmed by supported response headers. Missing values
-        mean unknown, never unlimited. Local budgets are lifetime attempt caps
-        until you change them.
-      </div>
-      <div className="panel">
-        <h2>Allowance alerts</h2>
-        <p className="muted text-xs">
-          Show an alert when a confirmed provider allowance reaches these
-          thresholds.
-        </p>
+      <details className="compact-details">
+        <summary>Alerts</summary>
         <div className="actions">
           {[50, 80, 90, 100].map((n) => (
             <label className="check" key={n}>
@@ -85,7 +69,7 @@ export default function Usage() {
             </label>
           ))}
         </div>
-      </div>
+      </details>
       {error && <p className="error">{error}</p>}
       <div className="integration-grid">
         {rows.map((r) => (
@@ -113,7 +97,6 @@ export default function Usage() {
                       : "Unavailable"}
               </span>
             </div>
-            <p>{r.source}</p>
             <div className="metrics">
               <div>
                 <small>ALLOWANCE</small>
@@ -138,28 +121,33 @@ export default function Usage() {
                 }}
               />
             </div>
-            <p>
-              {r.percentage === null
-                ? "Allowance percentage unknown"
-                : r.percentage.toFixed(1) + "% of reported allowance used"}{" "}
-              · Reset:{" "}
-              {r.reset ? new Date(r.reset).toLocaleString() : "Unknown"}
-            </p>
-            <p>
-              {r.successes} successful · {r.failures} failed · Safety limit{" "}
-              {r.safety_limit_per_minute}/minute
-            </p>
-            <p>
-              Last success:{" "}
-              {r.last_success
-                ? new Date(r.last_success).toLocaleString()
-                : "No successful request recorded"}
-              <br />
-              Last usage update:{" "}
-              {r.last_update
-                ? new Date(r.last_update).toLocaleString()
-                : "Not recorded"}
-            </p>
+            <details className="compact-details">
+              <summary>Details</summary>
+              <p>{r.source}</p>
+              <p>
+                {r.percentage === null
+                  ? "Usage unknown"
+                  : r.percentage.toFixed(1) +
+                    "% of reported allowance used"}{" "}
+                · Reset:{" "}
+                {r.reset ? new Date(r.reset).toLocaleString() : "Unknown"}
+              </p>
+              <p>
+                {r.successes} successful · {r.failures} failed · Safety limit{" "}
+                {r.safety_limit_per_minute}/minute
+              </p>
+              <p>
+                Last success:{" "}
+                {r.last_success
+                  ? new Date(r.last_success).toLocaleString()
+                  : "None"}
+                <br />
+                Last usage update:{" "}
+                {r.last_update
+                  ? new Date(r.last_update).toLocaleString()
+                  : "Not recorded"}
+              </p>
+            </details>
             {r.alerts.length > 0 && (
               <div className="notice">
                 Usage alert: {r.alerts.join("%, ")}% threshold reached.
@@ -191,7 +179,7 @@ export default function Usage() {
                 type="number"
                 min="0"
                 max="1000000"
-                placeholder="No local budget"
+                placeholder="Request budget"
                 defaultValue={r.budget ?? ""}
                 className="w-40"
               />

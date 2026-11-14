@@ -32,12 +32,29 @@ const intervals: Record<string, number> = {
   github: 6000,
   virustotal: 15000,
 };
+export class ProviderError extends Error {
+  constructor(
+    message: string,
+    public status = 0,
+  ) {
+    super(message);
+  }
+}
+export interface RequestOptions {
+  method?: string;
+  body?: unknown;
+  envelope?: boolean;
+  allowedStatuses?: number[];
+  timeout?: number;
+  maxBytes?: number;
+}
 export async function external(
   env: ProviderEnv,
   owner: string,
   provider: string,
   url: string,
   headers: Record<string, string> = {},
+  options: RequestOptions = {},
 ): Promise<any> {
   const time = Date.now();
   await env.DB.prepare(
@@ -76,11 +93,17 @@ export async function external(
   try {
     response = await fetch(url, {
       headers: {
-        "User-Agent": "Tracelet/0.1 (public-information research)",
+        "User-Agent": "Tracelet/0.2 (+https://github.com/Rylogix/Tracelet)",
+        ...(options.body === undefined
+          ? {}
+          : { "Content-Type": "application/json" }),
         ...headers,
       },
+      method: options.method || "GET",
+      body:
+        options.body === undefined ? undefined : JSON.stringify(options.body),
       redirect: "manual",
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(options.timeout || 6000),
     });
   } catch {
     await env.DB.prepare(
@@ -142,15 +165,17 @@ export async function external(
       .bind(time + Math.min(86400, seconds) * 1000, owner, provider)
       .run();
   }
-  if (!response.ok)
-    throw new Error(
+  if (!response.ok && !options.allowedStatuses?.includes(response.status))
+    throw new ProviderError(
       response.status === 404
         ? "No public record was returned (HTTP 404)."
         : response.status === 429
           ? "Provider rate limit reached."
           : "Provider returned an error; check credentials or try later.",
+      response.status,
     );
-  if (Number(response.headers.get("content-length")) > 2 * 1024 * 1024)
+  const byteLimit = options.maxBytes || 2 * 1024 * 1024;
+  if (Number(response.headers.get("content-length")) > byteLimit)
     throw new Error("Provider response exceeded the size limit.");
   const reader = response.body?.getReader();
   const chunks: Uint8Array[] = [];
@@ -160,7 +185,7 @@ export async function external(
     const next = await reader.read();
     if (next.done) break;
     size += next.value.length;
-    if (size > 2 * 1024 * 1024) {
+    if (size > byteLimit) {
       await reader.cancel();
       throw new Error("Provider response exceeded the size limit.");
     }
@@ -173,8 +198,35 @@ export async function external(
     offset += c.length;
   }
   try {
-    return JSON.parse(new TextDecoder().decode(bytes));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    if (
+      provider === "stackoverflow" &&
+      Number.isFinite(data.quota_max) &&
+      Number.isFinite(data.quota_remaining)
+    )
+      await env.DB.prepare(
+        "UPDATE usage SET quota_limit=?,remaining=?,confirmed=1 WHERE owner=? AND provider=?",
+      )
+        .bind(data.quota_max, data.quota_remaining, owner, provider)
+        .run();
+    if (
+      provider === "stackoverflow" &&
+      Number.isFinite(data.backoff) &&
+      data.backoff > 0
+    )
+      await env.DB.prepare(
+        "UPDATE usage SET blocked_until=? WHERE owner=? AND provider=?",
+      )
+        .bind(
+          Date.now() + Math.min(data.backoff, 86400) * 1000,
+          owner,
+          provider,
+        )
+        .run();
+    return options.envelope ? { status: response.status, data } : data;
   } catch {
+    if (options.envelope && response.status === 404)
+      return { status: 404, data: null };
     throw new Error("Provider returned an unsupported response.");
   }
 }

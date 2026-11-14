@@ -1,5 +1,4 @@
 import "@fontsource-variable/inter";
-import "@fontsource-variable/manrope";
 import "./globals.css";
 import { AuthGate } from "@/components/auth-gate";
 import { WorkspaceShell } from "@/components/workspace-shell";

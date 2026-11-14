@@ -65,4 +65,10 @@ export type Job = {
   unavailable: { name: string; reason: string }[];
   completed: number;
   total: number;
+  checks?: {
+    provider: string;
+    platform: string;
+    status: string;
+    reason?: string;
+  }[];
 };

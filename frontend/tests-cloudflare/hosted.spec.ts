@@ -28,7 +28,7 @@ test("public passkey signup, private real search, signout and account isolation"
   await passkey(page);
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Your best start in free OSINT." }),
+    page.getByRole("heading", { name: "Free OSINT." }),
   ).toBeVisible();
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
@@ -45,15 +45,12 @@ test("public passkey signup, private real search, signout and account isolation"
       registration = request.postDataJSON();
   });
   const name = "test-" + Date.now();
-  await page.getByLabel("Choose your Tracelet username").fill(name);
   await page
-    .getByRole("button", { name: "Create account with a passkey" })
+    .getByRole("button", { name: "Create account", exact: true })
     .click();
-  await expect(
-    page.getByRole("heading", {
-      name: "Your free OSINT workspace.",
-    }),
-  ).toBeVisible({ timeout: 30000 });
+  await page.getByLabel("Username", { exact: true }).fill(name);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
   expect(
     (
       await page.request.post("/api/auth/register/verify", {
@@ -62,20 +59,11 @@ test("public passkey signup, private real search, signout and account isolation"
       })
     ).status(),
   ).toBe(400);
-  await page.getByRole("button", { name: "Open my workspace" }).click();
   await page.getByLabel("Save to account", { exact: true }).check();
   await page.keyboard.press("Control+k");
-  await expect(
-    page.getByLabel("What would you like to investigate?"),
-  ).toBeFocused();
-  await page.getByRole("button", { name: "example.com", exact: true }).click();
-  await expect(
-    page.getByLabel("What would you like to investigate?"),
-  ).toHaveValue("example.com");
-  await page
-    .getByLabel("What would you like to investigate?")
-    .fill("+442079460018");
-  await page.getByRole("button", { name: "Investigate", exact: true }).click();
+  await expect(page.getByLabel("Search", { exact: true })).toBeFocused();
+  await page.getByLabel("Search", { exact: true }).fill("+442079460018");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });
@@ -141,17 +129,10 @@ test("public passkey signup, private real search, signout and account isolation"
   const p = await other.newPage();
   await passkey(p);
   await p.goto("/");
-  await p
-    .getByLabel("Choose your Tracelet username")
-    .fill("other-" + Date.now());
-  await p
-    .getByRole("button", { name: "Create account with a passkey" })
-    .click();
-  await expect(
-    p.getByRole("heading", {
-      name: "Your free OSINT workspace.",
-    }),
-  ).toBeVisible({ timeout: 30000 });
+  await p.getByRole("button", { name: "Create account", exact: true }).click();
+  await p.getByLabel("Username", { exact: true }).fill("other-" + Date.now());
+  await p.getByRole("button", { name: "Create account" }).click();
+  await expect(p.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
   expect((await p.request.get("/api/search/" + id)).status()).toBe(404);
   expect(await (await p.request.get("/api/history")).json()).toEqual([]);
   const providers = await (await p.request.get("/api/integrations")).json();
@@ -168,15 +149,11 @@ test("public passkey signup, private real search, signout and account isolation"
   await other.close();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Your best start in free OSINT." }),
+    page.getByRole("heading", { name: "Free OSINT." }),
   ).toBeVisible();
   expect((await page.request.get("/api/history")).status()).toBe(401);
-  await page.getByRole("button", { name: "Sign in with your passkey" }).click();
-  await expect(
-    page.getByRole("heading", {
-      name: "Your free OSINT workspace.",
-    }),
-  ).toBeVisible({ timeout: 30000 });
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
@@ -261,20 +238,15 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     process.env.TRACELET_LIVE !== "1",
     "Explicit live provider check, excluded from deterministic CI",
   );
-  test.setTimeout(60000);
+  test.setTimeout(120000);
   await passkey(page);
   await page.goto("/");
   await page
-    .getByLabel("Choose your Tracelet username")
-    .fill("live-" + Date.now());
-  await page
-    .getByRole("button", { name: "Create account with a passkey" })
+    .getByRole("button", { name: "Create account", exact: true })
     .click();
-  await expect(
-    page.getByRole("heading", {
-      name: "Your free OSINT workspace.",
-    }),
-  ).toBeVisible();
+  await page.getByLabel("Username", { exact: true }).fill("live-" + Date.now());
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
   const result = await page.request.post("/api/search", {
     headers: { "X-Tracelet-Client": "local-ui" },
     data: { query: "example.com", history: false },
@@ -287,6 +259,21 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     job = await (await page.request.get("/api/search/" + initial.id)).json();
     if (!["running", "queued"].includes(job.status)) break;
   }
+  const usernames = await page.request.post("/api/search", {
+    headers: { "X-Tracelet-Client": "local-ui" },
+    data: { query: "octocat", kind: "username", history: false },
+  });
+  expect(usernames.status()).toBe(202);
+  const started = await usernames.json();
+  let scan = started;
+  for (let i = 0; i < 80; i++) {
+    await page.waitForTimeout(500);
+    scan = await (await page.request.get("/api/search/" + started.id)).json();
+    if (!["running", "queued"].includes(scan.status)) break;
+  }
+  expect(scan.total).toBe(29);
+  expect(scan.checks).toHaveLength(29);
+  expect(scan.findings.some((f: { evidence: string }) => f.evidence === "https://github.com/octocat")).toBe(true);
   expect(
     (
       await page.request.delete("/api/account", {

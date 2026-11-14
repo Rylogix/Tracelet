@@ -4,7 +4,7 @@ Registry declarations live in `backend/app/registry.py` and `cloudflare/src/regi
 
 | Integration | Hosted | Local | Requirements / terms |
 |---|---|---|---|
-| GitHub public profiles | Implemented | Implemented | Official public REST endpoint; GitHub API terms; low-confidence handle match |
+| Username discovery (29 platforms) | Implemented | Implemented | Public APIs; exact handle confirmation; possible matches only |
 | DNS | Implemented | Implemented | Official Google Public DNS HTTPS API; Google's service/privacy terms apply |
 | RDAP | Implemented | Implemented | IANA bootstrap + registry endpoint (hosted); RDAP.org bootstrap (local); registry-specific data restrictions |
 | libphonenumber | Implemented | Implemented | JS MIT wrapper / Apache-2.0 metadata; Python port Apache-2.0; offline data |
@@ -23,3 +23,9 @@ All external adapters have timeouts, cooperative cancellation, safety limits and
 WhatsMyName, Blackbird, Socialscan, Holehe, GHunt, h8mail, PhoneInfoga, theHarvester, Subfinder, Amass, DNSRecon, SpiderFoot, Apache Tika, FFprobe, Tesseract, ImageHash, WhatWeb, httpx, Katana, crt.sh, SEC EDGAR, GLEIF, urlscan.io, Cytoscape.js and NetworkX.
 
 No license or current maintenance claim is made for backlog entries. Review upstream license at the exact version, last release/maintenance, official endpoint/data terms, credential requirements, actual rate limits, subprocess/network risk, supported OS and live tests before activation. Account-existence enumeration and sensitive profiling are outside the allowed product behavior even if a candidate tool supports them.
+
+## Username discovery
+
+The shared catalog in `backend/app/username_platforms.json` declares endpoints, official documentation, terms, response identity fields, timeouts and safety rates. Platforms: GitHub, GitLab, Codeberg, Gitea, DEV, Docker Hub, Hugging Face, Bluesky, Mastodon.social, Infosec.exchange, Pixelfed.social, Chess.com, Lichess, Hacker News, Keybase, Scratch, Trello, Discourse Meta, Cloudflare Community, Python Discourse, freeCodeCamp, Hugo, Modrinth, Stack Overflow, Wikipedia, Lemmy.world, Framatube, Roblox and Open Collective. Federated services check the named instance only.
+
+Six checks run concurrently. Only exact public API identities produce findings. Missing profiles, blocked requests, rate limits and malformed responses are distinct states. Results are cached privately for five minutes; cancellation prevents new checks and in-flight calls have four-second timeouts. All matches are possible matches, never identity proof. Native Sherlock/Maigret are still unavailable on Workers. MIT attribution for Sherlock test references is included in `backend/app/third-party/`.

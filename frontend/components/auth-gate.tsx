@@ -15,7 +15,6 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { Brand } from "./brand";
-import { TrailIllustration } from "./trail-illustration";
 import { Button } from "./ui/button";
 import { api } from "./api";
 const Runtime = createContext({
@@ -29,6 +28,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     "loading" | "local" | "login" | "signed-in" | "error"
   >("loading");
   const [username, setUsername] = useState("");
+  const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -114,157 +114,82 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
   if (status === "login")
     return (
-      <div className="auth-page">
-        <a className="skip-link" href="#signup-name">
-          Skip to sign in
-        </a>
-        <header className="auth-header">
+      <div className="auth-minimal">
+        <header>
           <Brand />
           <a
-            className="auth-github"
             href="https://github.com/Rylogix/Tracelet"
             target="_blank"
             rel="noreferrer"
           >
-            Free & open source <ArrowUpRight size={15} />
+            GitHub <ArrowUpRight size={13} />
           </a>
         </header>
-        <div className="auth-layout">
-          <section className="auth-story">
-            <div className="auth-kicker">
-              <span className="status-dot" /> FREE & OPEN SOURCE
-            </div>
-            <h1 aria-label="Your best start in free OSINT.">
-              Your best start
-              <br />
-              <span>in free OSINT.</span>
-            </h1>
-            <p className="auth-lead">
-              Search public profiles, inspect domains, analyze files, and manage
-              your online presence.
-            </p>
-
-            <TrailIllustration />
-            <div className="auth-principles">
-              <span>
-                <ScanLine size={15} />
-                Source links
-              </span>
-              <span>
-                <LockKeyhole size={15} />
-                Private workspace
-              </span>
-              <span>
-                <ShieldCheck size={15} />
-                Encrypted API keys
-              </span>
-            </div>
-          </section>
-          <section className="auth-form-area">
-            <div className="auth-card">
-              <div className="auth-card-heading">
-                <span className="auth-card-icon">
-                  <Fingerprint size={24} />
-                </span>
-                <span className="auth-card-step">CREATE ACCOUNT</span>
-                <h2>Create your workspace</h2>
-                <p>
-                  Sign up to save investigations and connect your own API keys.
-                </p>
-              </div>
+        <main className="auth-entry">
+          <h1>Free OSINT.</h1>
+          <div className="auth-entry-card">
+            {creating ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void authenticate(true);
                 }}
               >
-                <label htmlFor="signup-name">
-                  Choose your Tracelet username
+                <label htmlFor="signup-name" className="sr-only">
+                  Username
                 </label>
-                <div className="auth-input-wrap">
-                  <span>@</span>
-                  <input
-                    id="signup-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    pattern="[A-Za-z0-9_-]{3,32}"
-                    minLength={3}
-                    maxLength={32}
-                    autoComplete="username webauthn"
-                    placeholder="your-username"
-                    required
-                    disabled={busy}
-                  />
-                </div>
-                <p className="input-hint">
-                  3–32 characters. Letters, numbers, hyphens, or underscores.
-                </p>
-                <Button className="auth-primary" disabled={busy} type="submit">
+                <input
+                  id="signup-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  pattern="[A-Za-z0-9_-]{3,32}"
+                  title="3–32 letters, numbers, hyphens or underscores"
+                  minLength={3}
+                  maxLength={32}
+                  autoComplete="username webauthn"
+                  placeholder="Username"
+                  required
+                  disabled={busy}
+                />
+                <Button disabled={busy} type="submit">
                   {busy ? (
-                    <LoaderCircle size={17} className="spin" />
+                    <LoaderCircle size={16} className="spin" />
                   ) : (
-                    <KeyRound size={17} />
+                    <KeyRound size={16} />
                   )}{" "}
-                  {busy
-                    ? "Check your device…"
-                    : "Create account with a passkey"}
-                  {!busy && <ArrowRight size={16} />}
+                  {busy ? "Continue…" : "Create account"}
                 </Button>
+                <p className="recovery-note">
+                  Back up your passkey. No email recovery.
+                </p>
               </form>
-              <div className="auth-divider">
-                <span />
-                Already have an account?
-                <span />
-              </div>
-              <Button
-                className="auth-secondary"
-                variant="outline"
-                disabled={busy}
-                onClick={() => authenticate(false)}
-              >
-                Sign in with your passkey <ArrowRight size={16} />
+            ) : (
+              <Button disabled={busy} onClick={() => authenticate(false)}>
+                {busy ? (
+                  <LoaderCircle size={16} className="spin" />
+                ) : (
+                  <KeyRound size={16} />
+                )}{" "}
+                {busy ? "Continue…" : "Sign in"}
               </Button>
-              {error && (
-                <div role="alert" className="error">
-                  {error}
-                </div>
-              )}
-              <div className="passkey-explanation">
-                <ShieldCheck size={18} />
-                <div>
-                  <strong>Passkey authentication</strong>
-                  <p>
-                    Use Face ID, your fingerprint, or a security key. Your
-                    biometric data stays on your device.
-                  </p>
-                </div>
+            )}
+            <button
+              className="auth-switch"
+              disabled={busy}
+              onClick={() => {
+                setCreating(!creating);
+                setError("");
+              }}
+            >
+              {creating ? "Back to sign in" : "Create account"}
+            </button>
+            {error && (
+              <div role="alert" className="error">
+                {error}
               </div>
-              <p className="auth-recovery">
-                Keep your passkey synced or backed up. Email recovery is not
-                available.
-              </p>
-            </div>
-            <div className="auth-outside-note">
-              <LockKeyhole size={14} />
-              <p>
-                Investigations are private to your account.
-                <br />
-                File analysis happens entirely in your browser.
-              </p>
-            </div>
-          </section>
-        </div>
-        <footer className="auth-footer">
-          <span>© {new Date().getFullYear()} Tracelet</span>
-          <span>Free and open source</span>
-          <a
-            href="https://github.com/Rylogix/Tracelet"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Use public information responsibly <ArrowUpRight size={12} />
-          </a>
-        </footer>
+            )}
+          </div>
+        </main>
       </div>
     );
   return (

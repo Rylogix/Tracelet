@@ -54,3 +54,14 @@ For deterministic Workers tests without real external requests, run `npm test` w
 - Three production browser checks passed at https://tracelet.rylogix.com, including real DNS/RDAP queries, credential/account isolation, image analysis without uploads, and the redesigned routes. Temporary test accounts were deleted.
 - Live sign-in layout inspected at 320, 390, 768, 1024 and 1440 pixels. Visual captures reviewed for desktop/mobile sign-in, workspace, and evidence cards.
 - Deployment preserved the existing production database and encryption secret.
+
+## Username discovery and minimal interface — 2026-11-14
+
+- Python: 20 tests passed.
+- Worker: 83 tests passed with TRACELET_LIVE=1, including all 29 actual positive profile requests, missing-profile behavior, cache reuse and attempt accounting. Open Collective returns a GraphQL error for an unknown slug; Tracelet conservatively marks this unavailable.
+- Frontend static production build and Worker TypeScript check passed.
+- Hosted browser tests: desktop/mobile signup, real phone search, credential masking, account isolation and local file processing passed (4 deterministic checks).
+- Production desktop: passkeys, account isolation, DNS, RDAP and a complete 29-platform username job passed. GitHub octocat evidence confirmed; test accounts deleted.
+- Applied D1 migration 0002 and deployed Worker version 8dca6aac-ad45-4cb6-b492-554c07355402.
+
+The interface uses compact sign-in/create-account actions, a single search field, type filters and expandable technical details. Native Sherlock/Maigret remain disabled; the hosted username engine uses the documented public API catalog. No claim of exhaustive internet coverage is made. External provider availability is checked per request.

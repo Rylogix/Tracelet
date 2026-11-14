@@ -1,3 +1,4 @@
+from typing import Literal
 import asyncio
 import json
 import secrets
@@ -71,6 +72,7 @@ async def local_security(request: Request, call_next):
 
 
 class Search(BaseModel):
+    kind: Literal["username", "email", "phone", "website"] | None = None
     query: str = Field(min_length=1, max_length=253)
     history: bool = False
 
@@ -116,6 +118,17 @@ def save(job):
 async def execute(job):
     async with SEM:
         job["status"] = "running"
+        if job["kind"] == "username":
+            from .usernames import execute_username
+
+            try:
+                await execute_username(job, lambda: save(job))
+            except asyncio.CancelledError:
+                job["status"] = "cancelled"
+            finally:
+                save(job)
+                TASKS.pop(job["id"], None)
+            return
         available = [i for i in integrations() if job["kind"] in i["kinds"]]
         providers = [
             i
@@ -237,7 +250,7 @@ def usage():
             row["provider"]: dict(row) for row in conn.execute("SELECT * FROM usage")
         }
     result = []
-    for item in integrations():
+    for item in integrations(include_platforms=True):
         if item["rate"] is None:
             continue
         row = rows.get(
@@ -286,7 +299,9 @@ def usage():
 
 @app.put("/api/usage/{provider}/budget")
 def budget(provider: str, value: Budget):
-    if provider not in [i["id"] for i in REGISTRY if i["rate"]]:
+    if provider not in [
+        i["id"] for i in integrations(include_platforms=True) if i["rate"]
+    ]:
         raise HTTPException(404, "Unknown provider")
     with db.connect() as conn:
         conn.execute("INSERT OR IGNORE INTO usage(provider) VALUES(?)", (provider,))
@@ -307,7 +322,15 @@ async def search(value: Search):
         raise HTTPException(429, "Local search limit reached; try again shortly.")
     query = value.query.strip()
     try:
-        kind = detect(query)
+        kind = value.kind or detect(query)
+        import re
+
+        if kind == "username" and not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9_.-]{0,79}", query
+        ):
+            raise ValueError("Invalid username.")
+        if kind == "email" and detect(query) != "email":
+            raise ValueError("Invalid email.")
         target = (
             await asyncio.to_thread(
                 public_domain, query.split("@")[-1] if kind == "email" else query
@@ -322,6 +345,7 @@ async def search(value: Search):
     for prior in JOBS.values():
         if (
             prior["query"] == query
+            and prior["kind"] == kind
             and prior["status"] == "completed"
             and current - prior["started"] < 300
         ):

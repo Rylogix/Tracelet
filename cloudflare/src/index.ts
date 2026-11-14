@@ -1,3 +1,4 @@
+import { platforms, scanProfiles, type ProfileCheck } from "./usernames";
 import { auth, owner as identify, json, type AuthEnv } from "./auth";
 import { detect, domain, encrypt, githubHandle } from "./security";
 import { registry } from "./registry";
@@ -19,6 +20,7 @@ type Job = {
   unavailable: { name: string; reason: string }[];
   completed: number;
   total: number;
+  checks?: ProfileCheck[];
 };
 const stamp = () => new Date().toISOString();
 async function integrations(env: Env, owner: string) {
@@ -51,7 +53,7 @@ async function integrations(env: Env, owner: string) {
             ? "Connection test required"
             : "API key required",
       quota_reporting:
-        i.rate === null
+        i.id==='username-discovery'?'Per-platform usage and limits':i.rate === null
           ? "No external request quota"
           : "Provider headers when available; otherwise unknown",
       timeout_seconds: 25,
@@ -77,6 +79,43 @@ async function persist(env: Env, owner: string, job: Job) {
 async function runJob(env: Env, owner: string, job: Job) {
   job.status = "running";
   await persist(env, owner, job);
+  if (job.kind === "username") {
+    job.checks = [];
+    job.total = platforms.length;
+    job.completed = 0;
+    job.notes = ["Matching usernames do not establish identity."];
+    await persist(env, owner, job);
+    let updates = Promise.resolve();
+    await scanProfiles(
+      env,
+      owner,
+      job.target,
+      (check) => {
+        updates = updates.then(async () => {
+          const {finding:match,...summary}=check;
+          job.checks!.push(summary);
+          if (match) job.findings.push(match);
+          job.completed++;
+          await persist(env, owner, job);
+        });
+        return updates;
+      },
+      async () => {
+        const r = await env.DB.prepare(
+          "SELECT status FROM jobs WHERE id=? AND owner=?",
+        )
+          .bind(job.id, owner)
+          .first<{ status: string }>();
+        return !r || r.status === "cancelled";
+      },
+    );
+    await updates;
+    job.status = job.checks.some((c) => c.status === "unavailable")
+      ? "partial"
+      : "completed";
+    await persist(env, owner, job);
+    return;
+  }
   const items = await integrations(env, owner);
   const compatible = items.filter((i) =>
     (i.kinds as readonly string[]).includes(job.kind),
@@ -210,7 +249,14 @@ async function routes(
       configs?.thresholds || "[50,80,90,100]",
     );
     return json(
-      (await integrations(env, owner))
+      [
+        ...(await integrations(env, owner)),
+        ...platforms.map((p) => ({
+          ...p,
+          available: true,
+          rate: p.safety_per_minute,
+        })),
+      ]
         .filter((i) => i.rate !== null)
         .map((i) => {
           const r = rows.results.find((r) => r.provider === i.id) || {
@@ -254,7 +300,8 @@ async function routes(
     const provider = budget[1];
     const body = (await request.json()) as { requests: number | null };
     if (
-      !registry.some((i) => i.id === provider && i.rate) ||
+      (!registry.some((i) => i.id === provider && i.rate) &&
+        !platforms.some((i) => i.id === provider)) ||
       (body.requests !== null &&
         (!Number.isInteger(body.requests) ||
           body.requests < 0 ||
@@ -293,7 +340,11 @@ async function routes(
     return json({ ok: true });
   }
   if (path === "/api/search" && method === "POST") {
-    const body = (await request.json()) as { query: string; history: boolean };
+    const body = (await request.json()) as {
+      query: string;
+      history: boolean;
+      kind?: string;
+    };
     if (
       typeof body.query !== "string" ||
       !body.query.trim() ||
@@ -303,7 +354,19 @@ async function routes(
     const query = body.query.trim();
     let kind: string, target: string;
     try {
-      kind = detect(query);
+      if (
+        body.kind &&
+        !["username", "email", "phone", "website"].includes(body.kind)
+      )
+        throw new Error("Invalid search type.");
+      kind = body.kind || detect(query);
+      if (
+        kind === "username" &&
+        !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$/.test(query)
+      )
+        throw new Error("Invalid username.");
+      if (kind === "email" && detect(query) !== "email")
+        throw new Error("Invalid email.");
       target = ["website", "email"].includes(kind)
         ? domain(kind === "email" ? query.split("@")[1] : query)
         : query;
@@ -337,9 +400,9 @@ async function routes(
         429,
       );
     const cache = await env.DB.prepare(
-      "SELECT payload FROM jobs WHERE owner=? AND query=? AND status='completed' AND updated>? LIMIT 1",
+      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND status='completed' AND updated>? LIMIT 1",
     )
-      .bind(owner, query, Date.now() - 300000)
+      .bind(owner, query, kind, Date.now() - 300000)
       .first<{ payload: string }>();
     if (cache) {
       const cached = JSON.parse(cache.payload) as Job;
@@ -374,9 +437,7 @@ async function routes(
               "Only public domain mail configuration is inspected. No mailbox existence or account exposure is inferred.",
             ]
           : kind === "username"
-            ? [
-                "GitHub public profiles only. Matching usernames do not establish shared identity.",
-              ]
+            ? ["Matching usernames do not establish identity."]
             : [],
       unavailable: [],
       completed: 0,
@@ -728,6 +789,7 @@ const worker = {
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM provider_cache WHERE expires<?").bind(Date.now()),
       env.DB.prepare("DELETE FROM jobs WHERE expires<?").bind(Date.now()),
       env.DB.prepare("DELETE FROM sessions WHERE expires<?").bind(Date.now()),
       env.DB.prepare("DELETE FROM challenges WHERE expires<?").bind(Date.now()),

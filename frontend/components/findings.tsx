@@ -53,7 +53,7 @@ function Value({ value, depth = 0 }: { value: unknown; depth?: number }) {
     );
   }
   const entries = Object.entries(value as Record<string, unknown>).filter(
-    ([, v]) => v !== null && v !== undefined,
+    ([k, v]) => k !== "note" && v !== null && v !== undefined,
   );
   if (!entries.length)
     return <span className="muted">No additional properties returned</span>;
@@ -100,7 +100,9 @@ export function Findings({ items }: { items: Finding[] }) {
               title="Confidence in this observation does not establish anyone’s identity."
             >
               <i />
-              {label(item.confidence)} confidence
+              {item.confidence === "low"
+                ? "Possible match"
+                : label(item.confidence) + " confidence"}
             </span>
           </div>
           <h3>{item.title}</h3>

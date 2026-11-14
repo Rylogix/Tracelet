@@ -80,17 +80,14 @@ type History = {
 };
 export default function Home() {
   const { hosted } = useRuntime();
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Auto");
   const [query, setQuery] = useState("");
   const [historyEnabled, setHistoryEnabled] = useState(false);
-  const [setup, setSetup] = useState(false);
   const [history, setHistory] = useState<History[]>([]);
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [hint, setHint] = useState(
-    "Automatically detects usernames, emails, phone numbers, and domains.",
-  );
+  const [hint, setHint] = useState("");
   const [files, setFiles] = useState<Finding[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -111,7 +108,6 @@ export default function Home() {
   useEffect(() => {
     api<{ complete: boolean; history: boolean }>("/setup")
       .then((s) => {
-        setSetup(!s.complete);
         setHistoryEnabled(s.history);
       })
       .catch((e) => setError(e.message));
@@ -140,7 +136,14 @@ export default function Home() {
       setJob(
         await api<Job>("/search", {
           method: "POST",
-          body: JSON.stringify({ query, history: historyEnabled }),
+          body: JSON.stringify({
+            query,
+            history: historyEnabled,
+            kind:
+              selectedCategory === "Auto"
+                ? undefined
+                : selectedCategory.toLowerCase(),
+          }),
         }),
       );
     } catch (e) {
@@ -163,73 +166,18 @@ export default function Home() {
   }
   return (
     <>
-      {setup && (
-        <section className="setup">
-          <div className="eyebrow">
-            <Sparkles size={13} /> FIRST-TIME SETUP
-          </div>
-          <h2>Search history preferences</h2>
-          <p>
-            {hosted
-              ? "Your investigations are stored privately in your account."
-              : "Tracelet runs on your machine."}{" "}
-            Keyless modules are configured automatically. Optional API keys stay
-            encrypted server-side. Files stay on your device. Results do not
-            establish identity.{" "}
-            {hosted
-              ? "Unsaved search jobs expire after one hour; saved history after 30 days."
-              : "History is off by default."}
-          </p>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={historyEnabled}
-              onChange={(e) => setHistoryEnabled(e.target.checked)}
-            />
-            {hosted
-              ? "Save history to my private account for 30 days"
-              : "Save history locally for 30 days"}
-          </label>
-          <Button
-            onClick={async () => {
-              try {
-                await api("/setup", {
-                  method: "POST",
-                  body: JSON.stringify({ history: historyEnabled }),
-                });
-                setSetup(false);
-              } catch (e) {
-                setError((e as Error).message);
-              }
-            }}
-          >
-            Open my workspace <ArrowRight size={14} />
-          </Button>
-        </section>
-      )}
       <section className="hero">
         <div>
-          <div className="eyebrow">
-            <span className="eyebrow-line" /> INVESTIGATE
-          </div>
-          <h1 className="hero-title" aria-label="Your free OSINT workspace.">
-            Your free OSINT<span>workspace.</span>
+          <h1 className="hero-title" aria-label="Free OSINT.">
+            Free OSINT.
           </h1>
-          <p className="subtitle">
-            Search public information by username, email, phone number, domain,
-            or file.
-          </p>
-        </div>
-        <div className="hero-privacy">
-          <LockKeyhole size={19} />
-          <span>
-            Private workspace<small>Investigations are private.</small>
-          </span>
         </div>
       </section>
       <form className="search-panel" onSubmit={search}>
         <div className="search-panel-heading">
-          <label htmlFor="query">What would you like to investigate?</label>
+          <label className="sr-only" htmlFor="query">
+            Search
+          </label>
           <span className="search-shortcut">
             <kbd>⌘</kbd>
             <kbd>K</kbd>
@@ -239,13 +187,13 @@ export default function Home() {
           <Search size={21} />
           <input
             id="query"
+            aria-label="Search"
             ref={searchInput}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              setSelectedCategory("");
             }}
-            placeholder="Enter a username, email, phone, or website"
+            placeholder="Username, email, phone or domain"
             required
             maxLength={253}
           />
@@ -268,43 +216,20 @@ export default function Home() {
             }
             type="submit"
           >
-            {busy ? "Working…" : "Investigate"}
+            {busy ? "Searching…" : "Search"}
             <ArrowRight size={16} />
           </Button>
         </div>
-        <div className="search-hints">
-          <span>
-            <Sparkles size={13} />
-            {hint}
-          </span>
+        <div className="search-footer">
           <button
             type="button"
             className="upload-link"
             onClick={() => fileInput.current?.click()}
           >
             <Upload size={14} />
-            Analyze a file
+            File
           </button>
-        </div>
-        <div className="search-examples">
-          <span>Examples:</span>
-          {[
-            { label: "A public username", value: "octocat" },
-            { label: "example.com", value: "example.com" },
-            { label: "An international number", value: "+442079460018" },
-          ].map((e) => (
-            <button
-              key={e.value}
-              type="button"
-              onClick={() => {
-                setQuery(e.value);
-                searchInput.current?.focus();
-              }}
-            >
-              {e.label}
-              <ArrowUpRight size={11} />
-            </button>
-          ))}
+          {hint && <span>{hint}</span>}
         </div>
       </form>
       {error && (
@@ -325,7 +250,9 @@ export default function Home() {
                     : "muted"
                 }
               >
-                {job.kind} · {job.status} · {job.completed}/{job.total} modules
+                {job.checks
+                  ? `${job.findings.length} matches · ${job.completed}/${job.total} sites`
+                  : `${job.kind} · ${job.status}`}
               </p>
             </div>
             <div className="actions">
@@ -370,34 +297,59 @@ export default function Home() {
               />
             </div>
           )}
-          {job.notes.map((n, i) => (
-            <p className="notice" key={i}>
-              {n}
-            </p>
-          ))}
-          {job.unavailable.map((m, i) => (
-            <p className="notice" key={i}>
-              {m.name}: {m.reason}
-            </p>
-          ))}
-          {job.errors.map((m, i) => (
-            <p className="error" key={i}>
-              {m.source}: {m.message}
-            </p>
-          ))}
+          {job.checks && (
+            <details className="compact-details">
+              <summary>
+                Checks ({job.completed}/{job.total})
+              </summary>
+              <ul className="check-list">
+                {job.checks.map((c) => (
+                  <li key={c.provider}>
+                    <span>{c.platform}</span>
+                    <span>
+                      {c.status === "found"
+                        ? "Match"
+                        : c.status === "not_found"
+                          ? "Not found"
+                          : c.reason || "Unavailable"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {!job.checks &&
+            (job.notes.length > 0 ||
+              job.unavailable.length > 0 ||
+              job.errors.length > 0) && (
+              <details className="compact-details">
+                <summary>Details</summary>
+                {job.notes.map((n, i) => (
+                  <p key={"note" + i}>{n}</p>
+                ))}
+                {job.unavailable.map((m, i) => (
+                  <p key={"off" + i}>
+                    {m.name}: {m.reason}
+                  </p>
+                ))}
+                {job.errors.map((m, i) => (
+                  <p key={"err" + i}>
+                    {m.source}: {m.message}
+                  </p>
+                ))}
+              </details>
+            )}
           <Findings items={job.findings} />
           {!job.findings.length &&
             !["running", "queued"].includes(job.status) && (
-              <div className="empty">
-                No findings returned. This is not evidence of absence.
-              </div>
+              <div className="empty">No confirmed matches.</div>
             )}
         </section>
       )}
       {files.length > 0 && (
         <section className="panel">
           <div className="row">
-            <h2>Local file analysis</h2>
+            <h2>File</h2>
             <Button
               variant="outline"
               onClick={() => download(files, "tracelet-file.json")}
@@ -406,67 +358,25 @@ export default function Home() {
               Export
             </Button>
           </div>
-          <p className="notice">
-            Analyzed in your browser. No upload sent or retained.
-          </p>
+
           <Findings items={files} />
         </section>
       )}
-      <div className="section-heading">
-        <div>
-          <span className="section-kicker">EXPLORE</span>
-          <h2>Choose a search type</h2>
-        </div>
-        <span>6 categories</span>
-      </div>
-      <div className="categories">
-        {categories.map((c) =>
-          c.name === "My digital footprint" ? (
-            <Link
-              className="category category-footprint"
-              href="/footprint"
-              key={c.name}
-            >
-              <span className="icon">
-                <c.icon size={19} />
-              </span>
-              <ArrowRight className="arrow" size={15} />
-              <div className="category-copy">
-                <strong>{c.name}</strong>
-                <p>{c.description}</p>
-              </div>
-            </Link>
-          ) : (
-            <button
-              type="button"
-              className={
-                "category category-" +
-                c.name.toLowerCase() +
-                (selectedCategory === c.name ? " selected" : "")
-              }
-              aria-pressed={selectedCategory === c.name}
-              key={c.name}
-              onClick={() => {
-                setSelectedCategory(c.name);
-                setHint(c.note);
-                if (c.name === "Files") fileInput.current?.click();
-                else {
-                  setQuery(c.example);
-                  searchInput.current?.focus();
-                }
-              }}
-            >
-              <span className="icon">
-                <c.icon size={19} />
-              </span>
-              <ArrowRight className="arrow" size={15} />
-              <div className="category-copy">
-                <strong>{c.name}</strong>
-                <p>{c.description}</p>
-              </div>
-            </button>
-          ),
-        )}
+      <div className="search-types" aria-label="Search type">
+        {["Auto", "Username", "Email", "Phone", "Website"].map((type) => (
+          <button
+            key={type}
+            type="button"
+            aria-pressed={selectedCategory === type}
+            onClick={() => {
+              setSelectedCategory(type);
+              setHint(type === "Phone" ? "Include country code." : "");
+              searchInput.current?.focus();
+            }}
+          >
+            {type}
+          </button>
+        ))}
       </div>
       <input
         ref={fileInput}
@@ -481,8 +391,7 @@ export default function Home() {
       />
       <div className="section-heading">
         <div>
-          <span className="section-kicker">HISTORY</span>
-          <h2>Saved investigations</h2>
+          <h2>History</h2>
         </div>
         <div className="actions">
           <label className="check">
@@ -557,21 +466,8 @@ export default function Home() {
             <FolderSearch size={24} />
           </span>
           <strong>No saved investigations</strong>
-          <p>Enable history to save and reopen searches.</p>
-          <span className="empty-footnote">
-            <LockKeyhole size={12} />
-            History is optional.
-          </span>
         </div>
       )}
-      <div className="responsible-note">
-        <ShieldCheck size={14} className="inline mr-2" />
-        Use Tracelet responsibly. Only investigate information you are
-        authorized to access.{" "}
-        <Link href="/settings/integrations" className="text-neutral-200">
-          View available tools <ArrowUpRight size={12} />
-        </Link>
-      </div>
     </>
   );
 }

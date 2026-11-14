@@ -56,17 +56,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="privacy-note">
-            <ShieldCheck size={18} />
-            <div>
-              <strong>Data privacy</strong>
-              <p>
-                {hosted
-                  ? "Account data is private."
-                  : "Data is stored locally."}
-              </p>
-            </div>
-          </div>
           <a
             className="source-link"
             href="https://github.com/Rylogix/Tracelet"
@@ -81,7 +70,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             </span>
             <div>
               <strong>{username || "Local workspace"}</strong>
-              <small>Personal workspace</small>
             </div>
             {hosted && (
               <button
@@ -107,11 +95,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             <Brand compact />
           </div>
           <div className="header-actions">
-            <span className="secure-label">
-              <LockKeyhole size={13} />
-              Private workspace
-            </span>
-            <span className="header-divider" />
             <span
               className="header-avatar avatar"
               title={username || "Local workspace"}
@@ -131,17 +114,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main id="main-content">{children}</main>
-        <footer className="workspace-footer">
-          <span>© {new Date().getFullYear()} Tracelet</span>
-          <span>Free and open source</span>
-          <a
-            href="https://github.com/Rylogix/Tracelet"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open source <ArrowUpRight size={12} />
-          </a>
-        </footer>
       </div>
       <nav className="mobile-navigation" aria-label="Mobile navigation">
         {links.map((l) => (

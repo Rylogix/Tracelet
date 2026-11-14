@@ -13,7 +13,9 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-async def request(provider, url, headers=None):
+async def request(
+    provider, url, headers=None, *, method="GET", body=None, envelope=False, timeout=20
+):
     """Serialize per provider; atomically reserve local budget before transmission."""
     lock = LOCKS.setdefault(provider, asyncio.Lock())
     async with lock:
@@ -42,11 +44,20 @@ async def request(provider, url, headers=None):
         LAST[provider] = time.monotonic()
         try:
             async with httpx.AsyncClient(
-                timeout=20, follow_redirects=False, trust_env=True
+                timeout=timeout, follow_redirects=False, trust_env=True
             ) as client:
-                response = await client.get(
-                    url, headers=headers or {}, follow_redirects=False
-                )
+                if method == "GET":
+                    response = await client.get(
+                        url, headers=headers or {}, follow_redirects=False
+                    )
+                else:
+                    response = await client.request(
+                        method,
+                        url,
+                        headers=headers or {},
+                        json=body,
+                        follow_redirects=False,
+                    )
                 # Only RDAP's trusted bootstrap may redirect, and only to public HTTPS endpoints.
                 if provider == "rdap":
                     from .security import public_domain
@@ -92,6 +103,28 @@ async def request(provider, url, headers=None):
                         "UPDATE usage SET blocked_until=? WHERE provider=?",
                         (time.time() + seconds, provider),
                     )
+            if envelope:
+                if len(response.content) > 1024 * 1024:
+                    raise ValueError("Response too large")
+                try:
+                    data = response.json()
+                except ValueError:
+                    data = None
+                if provider == "stackoverflow" and isinstance(data, dict):
+                    with connect() as db:
+                        if isinstance(data.get("quota_max"), int) and isinstance(
+                            data.get("quota_remaining"), int
+                        ):
+                            db.execute(
+                                "UPDATE usage SET quota_limit=?,remaining=?,confirmed=1 WHERE provider=?",
+                                (data["quota_max"], data["quota_remaining"], provider),
+                            )
+                        if isinstance(data.get("backoff"), int):
+                            db.execute(
+                                "UPDATE usage SET blocked_until=? WHERE provider=?",
+                                (time.time() + data["backoff"], provider),
+                            )
+                return {"status": response.status_code, "data": data}
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError:

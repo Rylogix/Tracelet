@@ -1,3 +1,4 @@
+import time
 import os
 import sqlite3
 from pathlib import Path
@@ -25,8 +26,11 @@ def initialize():
         CREATE TABLE IF NOT EXISTS ownership(profile_id TEXT PRIMARY KEY, challenge TEXT NOT NULL, verified INTEGER NOT NULL DEFAULT 0, monitoring INTEGER NOT NULL DEFAULT 0, interval_hours INTEGER NOT NULL DEFAULT 24, last_scan TEXT, snapshot TEXT);
         CREATE TABLE IF NOT EXISTS alerts(id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, created TEXT NOT NULL, message TEXT NOT NULL);
         INSERT OR IGNORE INTO migrations VALUES(2);
+        CREATE TABLE IF NOT EXISTS provider_cache(provider TEXT NOT NULL,query TEXT NOT NULL,payload TEXT NOT NULL,expires REAL NOT NULL,PRIMARY KEY(provider,query));
+        INSERT OR IGNORE INTO migrations VALUES(3);
         CREATE TABLE IF NOT EXISTS footprint(id TEXT PRIMARY KEY, url TEXT NOT NULL, username TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL);
         """)
+        db.execute("DELETE FROM provider_cache WHERE expires<?", (time.time(),))
 
 
 @contextmanager

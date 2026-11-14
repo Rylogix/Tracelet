@@ -1,12 +1,23 @@
+from .usernames import PLATFORMS
 import importlib.util
 import shutil
 
 REGISTRY = [
     dict(
+        id="username-discovery",
+        name="Username search",
+        description="Public profiles across 29 platforms.",
+        kinds=["username"],
+        license="Provider public API terms",
+        credential=False,
+        docs="https://github.com/Rylogix/Tracelet/blob/main/INTEGRATIONS.md",
+        rate=None,
+    ),
+    dict(
         id="github",
         name="GitHub public profiles",
         description="Public GitHub account metadata; a matching handle does not establish identity",
-        kinds=["username"],
+        kinds=[],
         license="Provider terms (GitHub public REST API)",
         credential=False,
         docs="https://docs.github.com/en/rest/users/users",
@@ -71,7 +82,7 @@ REGISTRY = [
         id="sherlock",
         name="Sherlock",
         description="Public username profiles; matching handles do not establish identity",
-        kinds=["username"],
+        kinds=[],
         license="MIT",
         credential=False,
         command="sherlock",
@@ -83,7 +94,7 @@ REGISTRY = [
         id="maigret",
         name="Maigret",
         description="Username discovery; optional adapter pending compatibility validation",
-        kinds=["username"],
+        kinds=[],
         license="MIT",
         credential=False,
         command="maigret",
@@ -119,11 +130,30 @@ REGISTRY = [
 ]
 
 
-def integrations():
+def integrations(include_platforms=False):
     from .db import credential, connect
 
     result = []
-    for item in REGISTRY:
+    items = REGISTRY
+    if include_platforms:
+        items = [
+            *REGISTRY,
+            *[
+                dict(
+                    id=s["id"],
+                    name=s["name"],
+                    description="",
+                    kinds=["username"],
+                    license=s["license"],
+                    credential=False,
+                    docs=s["docs"],
+                    rate=s["safety_per_minute"],
+                )
+                for s in PLATFORMS
+                if s["id"] != "github"
+            ],
+        ]
+    for item in items:
         installed = (
             bool(shutil.which(item["command"]))
             if "command" in item

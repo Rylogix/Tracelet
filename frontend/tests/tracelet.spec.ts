@@ -3,15 +3,13 @@ test("first run and real phone search", async ({ page }) => {
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Your free OSINT workspace.",
+      name: "Free OSINT.",
     }),
   ).toBeVisible();
   const welcome = page.getByRole("button", { name: "Open my workspace" });
   if (await welcome.isVisible()) await welcome.click();
-  await page
-    .getByLabel("What would you like to investigate?")
-    .fill("+442079460018");
-  await page.getByRole("button", { name: "Investigate", exact: true }).click();
+  await page.getByLabel("Search", { exact: true }).fill("+442079460018");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });

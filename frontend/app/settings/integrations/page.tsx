@@ -74,19 +74,7 @@ export default function Integrations() {
   ];
   return (
     <>
-      <div className="eyebrow">
-        <Plug size={13} /> SETTINGS
-      </div>
       <h1>Integrations</h1>
-      <p className="subtitle">
-        Keyless tools need no account. Optional providers use your credentials
-        and quotas.
-      </p>
-      <div className="notice">
-        No paid API usage is enabled. Optional providers must be used within
-        your free allocation. Unknown quotas are labeled explicitly. Keys never
-        return to this page after saving.
-      </div>
       {message && (
         <p role="status" className="notice">
           {message}
@@ -108,7 +96,7 @@ export default function Integrations() {
       {!filteredItems.length && (
         <div className="empty">
           <strong>No tools in this view.</strong>
-          <p>Choose another filter to explore your integrations.</p>
+          <p></p>
         </div>
       )}
       <div className="integration-grid">
@@ -120,34 +108,17 @@ export default function Integrations() {
                 {i.status}
               </span>
             </div>
-            <p>{i.description}</p>
             <div className="actions">
               <span className="badge">
                 {i.credential ? "Personal key required" : "No API key"}
               </span>
               {i.free_tier && <span className="badge">Free tier offered</span>}
             </div>
-            <p>
-              {i.quota_reporting}
-              <br />
-              {i.rate !== null
-                ? "Safety rate: " +
-                  i.rate +
-                  "/minute · Last success: " +
-                  (health.find((h) => h.provider === i.id)?.last_success
-                    ? new Date(
-                        health.find((h) => h.provider === i.id)!.last_success!,
-                      ).toLocaleString()
-                    : "Not recorded")
-                : "No external API quota"}
-            </p>
             {i.credential && (
               <>
                 <label className="check" htmlFor={"key-" + i.id}>
                   <KeyRound size={13} />
-                  {i.connected
-                    ? "Saved key: •••••••• · enter a replacement"
-                    : "Personal API key"}
+                  {i.connected ? "Saved key: ••••••••" : "Personal API key"}
                 </label>
                 <input
                   id={"key-" + i.id}
@@ -155,7 +126,7 @@ export default function Integrations() {
                   autoComplete="off"
                   value={keys[i.id] || ""}
                   onChange={(e) => setKeys({ ...keys, [i.id]: e.target.value })}
-                  placeholder="Enter your own API key"
+                  placeholder="API key"
                 />
                 <div className="actions">
                   <Button
@@ -186,16 +157,35 @@ export default function Integrations() {
                 </div>
               </>
             )}
-            <div className="actions">
-              <a href={i.docs} target="_blank" rel="noreferrer">
-                Documentation <ExternalLink size={10} className="inline" />
-              </a>
-              {i.registration && (
-                <a href={i.registration} target="_blank" rel="noreferrer">
-                  Get your own key ↗
+            <details className="compact-details">
+              <summary>Details</summary>
+              <p>{i.description}</p>
+              <p>
+                {i.quota_reporting}
+                <br />
+                {i.rate !== null
+                  ? "Safety rate: " +
+                    i.rate +
+                    "/minute · Last success: " +
+                    (health.find((h) => h.provider === i.id)?.last_success
+                      ? new Date(
+                          health.find((h) => h.provider === i.id)!
+                            .last_success!,
+                        ).toLocaleString()
+                      : "Not recorded")
+                  : i.id==='username-discovery'?'Limits tracked per site':"No external API quota"}
+              </p>
+              <div className="actions">
+                <a href={i.docs} target="_blank" rel="noreferrer">
+                  Documentation <ExternalLink size={10} className="inline" />
                 </a>
-              )}
-            </div>
+                {i.registration && (
+                  <a href={i.registration} target="_blank" rel="noreferrer">
+                    Get your own key ↗
+                  </a>
+                )}
+              </div>
+            </details>
           </section>
         ))}
       </div>

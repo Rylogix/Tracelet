@@ -56,3 +56,7 @@ Cloudflare-specific checks and browser authentication tests are documented in [V
 [Specification](SPEC.md) · [Architecture](ARCHITECTURE.md) · [Integrations](INTEGRATIONS.md) · [API limits](API_LIMITS.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Release packaging](docs/RELEASING.md)
 
 MIT licensed. Third-party tools and provider data retain their own licenses and terms.
+
+### Public username discovery
+
+Username searches check 29 public platforms concurrently and show only confirmed public profiles as possible matches. Expand Checks to see missing profiles, blocked requests and unavailable sources. Choose Username to search a dotted handle instead of a domain. See [INTEGRATIONS.md](INTEGRATIONS.md) for exact coverage.

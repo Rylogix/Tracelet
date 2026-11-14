@@ -1,0 +1,573 @@
+[
+  {
+    "provider": "github",
+    "target": "octocat",
+    "status": 200,
+    "data": {
+      "login": "octocat"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "github",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "gitlab",
+    "target": "blue",
+    "status": 200,
+    "data": [
+      {
+        "username": "Blue"
+      }
+    ],
+    "expected": "found"
+  },
+  {
+    "provider": "gitlab",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": [],
+    "expected": "not_found"
+  },
+  {
+    "provider": "codeberg",
+    "target": "blue",
+    "status": 200,
+    "data": {
+      "login": "Blue"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "codeberg",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "gitea",
+    "target": "gitea",
+    "status": 200,
+    "data": {
+      "login": "gitea"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "gitea",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "devto",
+    "target": "ben",
+    "status": 200,
+    "data": {
+      "username": "ben"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "devto",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "dockerhub",
+    "target": "blue",
+    "status": 200,
+    "data": {
+      "username": "blue"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "dockerhub",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "huggingface",
+    "target": "Pasanlaksitha",
+    "status": 200,
+    "data": {
+      "user": "Pasanlaksitha"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "huggingface",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "bluesky",
+    "target": "mcuban",
+    "status": 200,
+    "data": {
+      "handle": "mcuban.bsky.social"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "bluesky",
+    "target": "trclet9f27d4b5",
+    "status": 400,
+    "data": {
+      "message": "Profile not found"
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "mastodon",
+    "target": "Gargron",
+    "status": 200,
+    "data": {
+      "username": "Gargron"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "mastodon",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "infosec",
+    "target": "jerry",
+    "status": 200,
+    "data": {
+      "username": "jerry"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "infosec",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "pixelfed",
+    "target": "dansup",
+    "status": 200,
+    "data": {
+      "username": "dansup"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "pixelfed",
+    "target": "trclet9f27d4b5",
+    "status": 400,
+    "data": {
+      "error": "Record not found"
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "chess",
+    "target": "hikaru",
+    "status": 200,
+    "data": {
+      "username": "hikaru"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "chess",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "lichess",
+    "target": "john",
+    "status": 200,
+    "data": {
+      "username": "John"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "lichess",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "hackernews",
+    "target": "pg",
+    "status": 200,
+    "data": {
+      "id": "pg"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "hackernews",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": null,
+    "expected": "not_found"
+  },
+  {
+    "provider": "keybase",
+    "target": "blue",
+    "status": 200,
+    "data": {
+      "them": {
+        "basics": {
+          "username": "blue"
+        }
+      },
+      "status": {
+        "name": "OK"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "keybase",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": {
+      "status": {
+        "name": "NOT_FOUND"
+      }
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "scratch",
+    "target": "griffpatch",
+    "status": 200,
+    "data": {
+      "username": "griffpatch"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "scratch",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "trello",
+    "target": "blue",
+    "status": 200,
+    "data": {
+      "username": "blue"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "trello",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": null,
+    "expected": "not_found"
+  },
+  {
+    "provider": "discourse",
+    "target": "codinghorror",
+    "status": 200,
+    "data": {
+      "user": {
+        "username": "codinghorror"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "discourse",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {
+      "errors": [
+        "The requested URL or resource could not be found."
+      ]
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "cloudflare",
+    "target": "sdayman",
+    "status": 200,
+    "data": {
+      "user": {
+        "username": "sdayman"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "cloudflare",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {
+      "errors": [
+        "The requested URL or resource could not be found."
+      ]
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "python",
+    "target": "brettcannon",
+    "status": 200,
+    "data": {
+      "user": {
+        "username": "brettcannon"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "python",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {
+      "errors": [
+        "The requested URL or resource could not be found."
+      ]
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "freecodecamp",
+    "target": "QuincyLarson",
+    "status": 200,
+    "data": {
+      "user": {
+        "username": "QuincyLarson"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "freecodecamp",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {
+      "errors": [
+        "The requested URL or resource could not be found."
+      ]
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "hugo",
+    "target": "bep",
+    "status": 200,
+    "data": {
+      "user": {
+        "username": "bep"
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "hugo",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {
+      "errors": [
+        "The requested URL or resource could not be found."
+      ]
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "modrinth",
+    "target": "jellysquid3",
+    "status": 200,
+    "data": {
+      "username": "jellysquid3"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "modrinth",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": null,
+    "expected": "not_found"
+  },
+  {
+    "provider": "stackoverflow",
+    "target": "Quuxplusone",
+    "status": 200,
+    "data": {
+      "items": [
+        {
+          "user_id": 1424877,
+          "display_name": "Quuxplusone"
+        }
+      ]
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "stackoverflow",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": {
+      "items": []
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "wikipedia",
+    "target": "Jimbo_Wales",
+    "status": 200,
+    "data": {
+      "query": {
+        "users": [
+          {
+            "name": "Jimbo Wales"
+          }
+        ]
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "wikipedia",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": {
+      "query": {
+        "users": [
+          {
+            "name": "Trclet9f27d4b5",
+            "missing": true
+          }
+        ]
+      }
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "lemmy",
+    "target": "ruud",
+    "status": 200,
+    "data": {
+      "person_view": {
+        "person": {
+          "name": "ruud"
+        }
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "lemmy",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "peertube",
+    "target": "framasoft",
+    "status": 200,
+    "data": {
+      "name": "framasoft"
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "peertube",
+    "target": "trclet9f27d4b5",
+    "status": 404,
+    "data": {},
+    "expected": "not_found"
+  },
+  {
+    "provider": "roblox",
+    "target": "ROBLOX",
+    "status": 200,
+    "data": {
+      "data": [
+        {
+          "name": "Roblox",
+          "id": 1
+        }
+      ]
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "roblox",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": {
+      "data": []
+    },
+    "expected": "not_found"
+  },
+  {
+    "provider": "opencollective",
+    "target": "babel",
+    "status": 200,
+    "data": {
+      "data": {
+        "account": {
+          "id": "dgm9bnk8-0437xqry-ejpvzeol-jdayw5re",
+          "slug": "babel",
+          "name": "Babel"
+        }
+      }
+    },
+    "expected": "found"
+  },
+  {
+    "provider": "opencollective",
+    "target": "trclet9f27d4b5",
+    "status": 200,
+    "data": {
+      "data": {
+        "account": null
+      },
+      "errors": [
+        {
+          "message": "No collective found with slug trclet9f27d4b5",
+          "locations": [
+            {
+              "line": 1,
+              "column": 25
+            }
+          ],
+          "path": [
+            "account"
+          ],
+          "extensions": {
+            "code": "INTERNAL_SERVER_ERROR"
+          }
+        }
+      ]
+    },
+    "expected": "unavailable"
+  }
+]

@@ -1,14 +1,13 @@
 export const registry = [
   {
-    id: "github",
-    name: "GitHub public profiles",
-    description:
-      "Public profile metadata. Matching handles do not establish identity.",
+    id: "username-discovery",
+    name: "Username search",
+    description: "Public profiles across 29 platforms.",
     kinds: ["username"],
     credential: false,
-    rate: 10,
-    docs: "https://docs.github.com/en/rest/users/users",
-    license: "GitHub API terms",
+    rate: null,
+    docs: "https://github.com/Rylogix/Tracelet/blob/main/INTEGRATIONS.md",
+    license: "Provider public API terms",
   },
   {
     id: "dns",
@@ -69,7 +68,7 @@ export const registry = [
     id: "sherlock",
     name: "Sherlock",
     description: "Python subprocess tool; requires the self-hosted edition.",
-    kinds: ["username"],
+    kinds: [],
     credential: false,
     rate: null,
     restricted: true,
@@ -80,7 +79,7 @@ export const registry = [
     id: "maigret",
     name: "Maigret",
     description: "Python subprocess tool; requires the self-hosted edition.",
-    kinds: ["username"],
+    kinds: [],
     credential: false,
     rate: null,
     restricted: true,

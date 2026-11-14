@@ -1,3 +1,4 @@
+import json
 import asyncio
 import io
 import socket
@@ -256,3 +257,40 @@ def test_configurable_usage_alerts(client):
         ).status_code
         == 422
     )
+
+
+def test_public_username_response_contracts():
+    from app.usernames import PLATFORMS, interpret
+    from pathlib import Path
+
+    responses = json.loads(
+        (
+            Path(__file__).parents[2]
+            / "cloudflare/tests/fixtures/username-responses.json"
+        ).read_text()
+    )
+    for response in responses:
+        platform = next(p for p in PLATFORMS if p["id"] == response["provider"])
+        result = interpret(
+            platform, response["target"], response["status"], response["data"]
+        )
+        assert result["status"] == response["expected"], response["provider"]
+        if result["status"] == "found":
+            assert result["finding"]["confidence"] == "low"
+    for platform in PLATFORMS:
+        assert interpret(platform, "example", 403, {})["status"] == "unavailable"
+        assert interpret(platform, "example", 200, {})["status"] == "unavailable"
+
+
+def test_explicit_username_type_overrides_domain_detection(client, monkeypatch):
+    async def fake_execute(job, save):
+        job.update(status="completed", checks=[], total=0)
+
+    monkeypatch.setattr("app.usernames.execute_username", fake_execute)
+    response = client.post(
+        "/api/search",
+        json={"query": "some.handle", "kind": "username"},
+        headers=HEADERS,
+    )
+    assert response.status_code == 202
+    assert response.json()["kind"] == "username"
