@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRuntime } from "@/components/auth-gate";
 import { analyzeFile } from "@/components/analyze-file";
+import { Findings } from "@/components/findings";
 import {
   Search,
   ArrowRight,
@@ -13,11 +14,15 @@ import {
   Globe,
   Fingerprint,
   ShieldCheck,
-  Clock3,
   Sparkles,
   Upload,
   Download,
   Square,
+  X,
+  ArrowUpRight,
+  LockKeyhole,
+  FolderSearch,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, download, type Job, type Finding } from "@/components/api";
@@ -25,14 +30,14 @@ const categories = [
   {
     name: "Username",
     icon: AtSign,
-    description: "Explore public profiles and possible username matches.",
+    description: "Find public GitHub profile information.",
     example: "",
     note: "Public GitHub profiles. Matching handles do not establish identity.",
   },
   {
     name: "Email",
     icon: Mail,
-    description: "Understand the public mail infrastructure behind an address.",
+    description: "Inspect public DNS and mail records.",
     example: "hello@example.com",
     note: "Domain records only. No account enumeration.",
   },
@@ -47,21 +52,21 @@ const categories = [
   {
     name: "Files",
     icon: FileSearch,
-    description: "Look beneath the surface of images and PDF documents.",
+    description: "Extract metadata from images and PDF files.",
     example: "",
     note: "Images and PDFs up to 10 MB. Nothing retained.",
   },
   {
     name: "Website",
     icon: Globe,
-    description: "Inspect DNS records and public domain registration.",
+    description: "View DNS records and domain registration data.",
     example: "example.com",
     note: "Public domains only. No active security scanning.",
   },
   {
     name: "My digital footprint",
     icon: Fingerprint,
-    description: "Keep your own public accounts together in one private space.",
+    description: "Save your accounts and monitor verified profiles.",
     example: "",
     note: "",
   },
@@ -73,34 +78,9 @@ type History = {
   status: string;
   created: string;
 };
-function Findings({ items }: { items: Finding[] }) {
-  return (
-    <div className="results">
-      {items.map((item, i) => (
-        <article className="result" key={i}>
-          <div className="result-top">
-            <strong>{item.title}</strong>
-            <small>{item.source}</small>
-            <span className="badge">{item.confidence} confidence</span>
-          </div>
-          <pre>
-            {typeof item.value === "string"
-              ? item.value
-              : JSON.stringify(item.value, null, 2)}
-          </pre>
-          {item.evidence && /^https?:\/\//.test(item.evidence) && (
-            <a href={item.evidence} target="_blank" rel="noreferrer">
-              View source ↗
-            </a>
-          )}
-          <time>{new Date(item.observed_at).toLocaleString()}</time>
-        </article>
-      ))}
-    </div>
-  );
-}
 export default function Home() {
   const { hosted } = useRuntime();
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [query, setQuery] = useState("");
   const [historyEnabled, setHistoryEnabled] = useState(false);
   const [setup, setSetup] = useState(false);
@@ -118,6 +98,16 @@ export default function Home() {
     api<History[]>("/history")
       .then(setHistory)
       .catch(() => {});
+  useEffect(() => {
+    const focusSearch = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInput.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
   useEffect(() => {
     api<{ complete: boolean; history: boolean }>("/setup")
       .then((s) => {
@@ -176,12 +166,12 @@ export default function Home() {
       {setup && (
         <section className="setup">
           <div className="eyebrow">
-            <Sparkles size={13} /> WELCOME TO YOUR WORKSPACE
+            <Sparkles size={13} /> FIRST-TIME SETUP
           </div>
-          <h2>A little clarity before you begin.</h2>
+          <h2>Search history preferences</h2>
           <p>
             {hosted
-              ? "Your account data is stored privately in Cloudflare D1."
+              ? "Your investigations are stored privately in your account."
               : "Tracelet runs on your machine."}{" "}
             Keyless modules are configured automatically. Optional API keys stay
             encrypted server-side. Files stay on your device. Results do not
@@ -218,46 +208,103 @@ export default function Home() {
         </section>
       )}
       <section className="hero">
-        <div className="eyebrow">
-          <span className="dot" /> YOUR PRIVATE INTELLIGENCE WORKSPACE
+        <div>
+          <div className="eyebrow">
+            <span className="eyebrow-line" /> INVESTIGATE
+          </div>
+          <h1 className="hero-title" aria-label="Your free OSINT workspace.">
+            Your free OSINT<span>workspace.</span>
+          </h1>
+          <p className="subtitle">
+            Search public information by username, email, phone number, domain,
+            or file.
+          </p>
         </div>
-        <h1>Every trail starts with a clue.</h1>
-        <p className="subtitle">
-          Explore public information. Connect the dots. Keep your workspace
-          private.
-        </p>
+        <div className="hero-privacy">
+          <LockKeyhole size={19} />
+          <span>
+            Private workspace<small>Investigations are private.</small>
+          </span>
+        </div>
       </section>
       <form className="search-panel" onSubmit={search}>
-        <label htmlFor="query">What would you like to investigate?</label>
+        <div className="search-panel-heading">
+          <label htmlFor="query">What would you like to investigate?</label>
+          <span className="search-shortcut">
+            <kbd>⌘</kbd>
+            <kbd>K</kbd>
+          </span>
+        </div>
         <div className="search-row">
-          <Search size={19} />
+          <Search size={21} />
           <input
             id="query"
             ref={searchInput}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="A username, email, phone number, or website…"
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedCategory("");
+            }}
+            placeholder="Enter a username, email, phone, or website"
             required
             maxLength={253}
           />
+          {query && (
+            <button
+              type="button"
+              className="clear-search icon-button"
+              aria-label="Clear search"
+              onClick={() => {
+                setQuery("");
+                searchInput.current?.focus();
+              }}
+            >
+              <X size={16} />
+            </button>
+          )}
           <Button
             disabled={
               busy || (!!job && ["queued", "running"].includes(job.status))
             }
             type="submit"
           >
-            {busy ? "Working…" : "Investigate"} <ArrowRight size={15} />
+            {busy ? "Working…" : "Investigate"}
+            <ArrowRight size={16} />
           </Button>
         </div>
         <div className="search-hints">
           <span>
-            <Sparkles size={12} />
+            <Sparkles size={13} />
             {hint}
           </span>
-          <span>
-            <ShieldCheck size={12} />
-            Private workspace · Real sources
-          </span>
+          <button
+            type="button"
+            className="upload-link"
+            onClick={() => fileInput.current?.click()}
+          >
+            <Upload size={14} />
+            Analyze a file
+          </button>
+        </div>
+        <div className="search-examples">
+          <span>Examples:</span>
+          {[
+            { label: "A public username", value: "octocat" },
+            { label: "example.com", value: "example.com" },
+            { label: "An international number", value: "+442079460018" },
+          ].map((e) => (
+            <button
+              key={e.value}
+              type="button"
+              onClick={() => {
+                setQuery(e.value);
+                searchInput.current?.focus();
+              }}
+            >
+              {e.label}
+              <ArrowUpRight size={11} />
+            </button>
+          ))}
         </div>
       </form>
       {error && (
@@ -266,10 +313,11 @@ export default function Home() {
         </div>
       )}
       {job && (
-        <section className="panel" aria-live="polite">
+        <section className="panel investigation-panel" aria-live="polite">
           <div className="row">
             <div>
-              <h2>{job.query}</h2>
+              <span className="eyebrow">INVESTIGATION</span>
+              <h2 className="investigation-query">{job.query}</h2>
               <p
                 className={
                   ["running", "queued"].includes(job.status)
@@ -309,6 +357,19 @@ export default function Home() {
               </Button>
             </div>
           </div>
+          {job.total > 0 && ["queued", "running"].includes(job.status) && (
+            <div
+              className="job-progress"
+              role="progressbar"
+              aria-label="Investigation progress"
+              aria-valuenow={job.completed}
+              aria-valuemax={job.total}
+            >
+              <span
+                style={{ width: (job.completed / job.total) * 100 + "%" }}
+              />
+            </div>
+          )}
           {job.notes.map((n, i) => (
             <p className="notice" key={i}>
               {n}
@@ -352,26 +413,41 @@ export default function Home() {
         </section>
       )}
       <div className="section-heading">
-        <h2>Choose your starting point</h2>
-        <span>Six ways to find clarity</span>
+        <div>
+          <span className="section-kicker">EXPLORE</span>
+          <h2>Choose a search type</h2>
+        </div>
+        <span>6 categories</span>
       </div>
       <div className="categories">
         {categories.map((c) =>
           c.name === "My digital footprint" ? (
-            <Link className="category" href="/footprint" key={c.name}>
+            <Link
+              className="category category-footprint"
+              href="/footprint"
+              key={c.name}
+            >
               <span className="icon">
                 <c.icon size={19} />
               </span>
               <ArrowRight className="arrow" size={15} />
-              <strong>{c.name}</strong>
-              <p>{c.description}</p>
+              <div className="category-copy">
+                <strong>{c.name}</strong>
+                <p>{c.description}</p>
+              </div>
             </Link>
           ) : (
             <button
               type="button"
-              className="category"
+              className={
+                "category category-" +
+                c.name.toLowerCase() +
+                (selectedCategory === c.name ? " selected" : "")
+              }
+              aria-pressed={selectedCategory === c.name}
               key={c.name}
               onClick={() => {
+                setSelectedCategory(c.name);
                 setHint(c.note);
                 if (c.name === "Files") fileInput.current?.click();
                 else {
@@ -384,8 +460,10 @@ export default function Home() {
                 <c.icon size={19} />
               </span>
               <ArrowRight className="arrow" size={15} />
-              <strong>{c.name}</strong>
-              <p>{c.description}</p>
+              <div className="category-copy">
+                <strong>{c.name}</strong>
+                <p>{c.description}</p>
+              </div>
             </button>
           ),
         )}
@@ -402,7 +480,10 @@ export default function Home() {
         }}
       />
       <div className="section-heading">
-        <h2>Saved investigations</h2>
+        <div>
+          <span className="section-kicker">HISTORY</span>
+          <h2>Saved investigations</h2>
+        </div>
         <div className="actions">
           <label className="check">
             <input
@@ -446,28 +527,49 @@ export default function Home() {
               }
             >
               <span>
-                {h.query}
-                <span className="muted"> · {h.kind}</span>
+                <span className="history-icon">
+                  <FolderSearch size={17} />
+                </span>
+                <span className="history-copy">
+                  <strong>{h.query}</strong>
+                  <small>
+                    {h.kind} ·{" "}
+                    {new Date(h.created).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </small>
+                </span>
               </span>
               <span>
-                {h.status} <ArrowRight className="inline ml-2" size={13} />
+                <span className="history-status">
+                  {h.status === "completed" && <CheckCircle2 size={12} />}{" "}
+                  {h.status}
+                </span>
+                <ArrowRight className="inline ml-2" size={15} />
               </span>
             </button>
           ))}
         </div>
       ) : (
         <div className="empty">
-          <Clock3 size={23} />
-          <strong>A clean slate. A new perspective.</strong>Your saved
-          investigations will appear here. History is off by default.
+          <span className="empty-icon">
+            <FolderSearch size={24} />
+          </span>
+          <strong>No saved investigations</strong>
+          <p>Enable history to save and reopen searches.</p>
+          <span className="empty-footnote">
+            <LockKeyhole size={12} />
+            History is optional.
+          </span>
         </div>
       )}
-      <div className="notice">
+      <div className="responsible-note">
         <ShieldCheck size={14} className="inline mr-2" />
         Use Tracelet responsibly. Only investigate information you are
         authorized to access.{" "}
-        <Link href="/settings/integrations" className="text-violet-300">
-          Check module availability ↗
+        <Link href="/settings/integrations" className="text-neutral-200">
+          View available tools <ArrowUpRight size={12} />
         </Link>
       </div>
     </>

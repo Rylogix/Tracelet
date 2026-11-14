@@ -41,11 +41,11 @@ export default function Usage() {
   return (
     <>
       <div className="eyebrow">
-        <Activity size={13} /> RESOURCE AWARENESS
+        <Activity size={13} /> USAGE & LIMITS
       </div>
-      <h1>Know what every request costs.</h1>
+      <h1>API usage</h1>
       <p className="subtitle">
-        Real usage. Honest limits. No surprise paid requests.
+        Track requests, provider limits, and personal budgets.
       </p>
       <div className="notice">
         Local attempts include failures. Provider allowances and reset dates
@@ -92,7 +92,18 @@ export default function Usage() {
           <section className="panel" key={r.provider}>
             <div className="row">
               <h2>{r.name}</h2>
-              <span className={"badge " + (r.available ? "good" : "")}>
+              <span
+                className={
+                  "badge " +
+                  (r.blocked_until > Date.now() / 1000
+                    ? "warn"
+                    : r.remaining === 0
+                      ? "exhausted"
+                      : r.available
+                        ? "good"
+                        : "")
+                }
+              >
                 {r.blocked_until > Date.now() / 1000
                   ? "Rate limited"
                   : r.remaining === 0

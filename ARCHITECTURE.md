@@ -2,7 +2,7 @@
 
 ## Shared interface
 
-Next.js App Router, TypeScript, Tailwind and a shadcn-style Radix/CVA button component. UI uses a same-origin `/api` contract. Local builds proxy API routes to FastAPI; hosted builds statically export and Workers serve assets and APIs from one origin. `AuthGate` detects a local backend versus hosted authentication. Hosted data always requires a server-validated session regardless of UI state.
+Next.js App Router, TypeScript, Tailwind and a shadcn-style Radix/CVA button component. UI uses a same-origin `/api` contract. Self-hosted Inter and Manrope variable fonts (OFL-1.1), a shared responsive workspace shell, active navigation, and normalized evidence cards provide consistent presentation. Raw source data stays available behind an expandable disclosure. Local builds proxy API routes to FastAPI; hosted builds statically export and Workers serve assets and APIs from one origin. `AuthGate` detects a local backend versus hosted authentication. Hosted data always requires a server-validated session regardless of UI state.
 
 ## Cloudflare mode
 

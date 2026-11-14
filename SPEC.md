@@ -10,7 +10,7 @@ The original local-first specification remains supported. The owner subsequently
 
 - Universal input router, compatible integration selection and graceful unavailable-module explanations.
 - Bounded execution, progress, cancellation, short-lived caching, optional saved history and JSON exports.
-- Six category cards and responsive dark UI. Technical tool configuration belongs in Integrations.
+- Six category cards and a responsive matte charcoal UI, white text/controls/outlines, and color reserved for small status indicators. Only the signup and workspace hero headlines use promotional copy about free OSINT; the rest uses plain functional labels. Technical tool configuration belongs in Integrations.
 - Settings: availability, credentials, free-tier indication, official registration/docs links, secure masked keys, connect/replace/disconnect/test.
 - Usage: request attempts, success/failure counts, actual provider header limits/remaining/reset, source provenance, local budgets, last success/update, rate status, percentage alerts when mathematically supported. Unknown values stay unknown. No invented resets or allowances.
 - Personal footprint: explicit account addition, GitHub bio challenge, verify/reject by deletion, explicit daily monitoring, alerts, export and delete.

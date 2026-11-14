@@ -46,9 +46,9 @@ export default function Footprint() {
   return (
     <>
       <div className="eyebrow">
-        <Fingerprint size={14} /> MY DIGITAL FOOTPRINT
+        <Fingerprint size={14} /> ACCOUNTS
       </div>
-      <h1>Your public presence, in perspective.</h1>
+      <h1>My digital footprint</h1>
       <p className="subtitle">
         A private collection of accounts you own.{" "}
         {hosted ? "Isolated to your account." : "Stored on this machine."}
@@ -136,7 +136,7 @@ export default function Footprint() {
                   href={i.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-violet-300 text-xs break-all"
+                  className="text-neutral-200 text-xs break-all"
                 >
                   {i.url}
                 </a>
@@ -169,7 +169,7 @@ export default function Footprint() {
                 </Button>
                 {i.challenge && (
                   <>
-                    <code className="text-xs break-all text-violet-300 select-all">
+                    <code className="text-xs break-all text-neutral-200 select-all">
                       {i.challenge}
                     </code>
                     <p className="muted text-xs">
@@ -211,8 +211,8 @@ export default function Footprint() {
       ) : (
         <div className="empty">
           <Fingerprint size={26} />
-          <strong>Your footprint starts with you.</strong>Add a public account
-          you own to keep it organized.
+          <strong>No accounts added</strong>Add a public account you own to keep
+          it organized.
         </div>
       )}
       {hosted && (

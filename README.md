@@ -1,6 +1,6 @@
 # Tracelet
 
-A free, open-source OSINT workspace for public information, with real sources and transparent API usage. Dark, responsive Next.js interface with purple accents.
+A free, open-source OSINT workspace for public information, with real sources and transparent API usage. Matte charcoal Next.js interface with white controls and responsive mobile navigation.
 
 **Two deployment modes:** a public-signup Cloudflare website at your own domain, or a private local installation. The hosted edition is live at **https://tracelet.rylogix.com**.
 

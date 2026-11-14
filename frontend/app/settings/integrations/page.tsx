@@ -1,11 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRuntime } from "@/components/auth-gate";
 import { Plug, KeyRound, ExternalLink } from "lucide-react";
 import { api, type Integration } from "@/components/api";
 import { Button } from "@/components/ui/button";
 export default function Integrations() {
-  const { hosted } = useRuntime();
+  const [filter, setFilter] = useState("All tools");
   const [items, setItems] = useState<Integration[]>([]);
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -55,12 +54,30 @@ export default function Integrations() {
       setBusy("");
     }
   }
+  const needsSetup = (i: Integration) =>
+    ["API key required", "Connection test required"].includes(i.status);
+  const filteredItems = items.filter(
+    (i) =>
+      filter === "All tools" ||
+      (filter === "Ready to use"
+        ? i.available
+        : filter === "Needs setup"
+          ? needsSetup(i)
+          : !i.available && !needsSetup(i)),
+  );
+  const filters = ["All tools", "Ready to use", "Needs setup", "Unavailable"];
+  const counts = [
+    items.length,
+    items.filter((i) => i.available).length,
+    items.filter(needsSetup).length,
+    items.filter((i) => !i.available && !needsSetup(i)).length,
+  ];
   return (
     <>
       <div className="eyebrow">
-        <Plug size={13} /> SETTINGS / INTEGRATIONS
+        <Plug size={13} /> SETTINGS
       </div>
-      <h1>Good sources. Clear boundaries.</h1>
+      <h1>Integrations</h1>
       <p className="subtitle">
         Keyless tools need no account. Optional providers use your credentials
         and quotas.
@@ -75,8 +92,27 @@ export default function Integrations() {
           {message}
         </p>
       )}
+      <div className="tool-filters" aria-label="Filter integrations">
+        {filters.map((name, index) => (
+          <button
+            key={name}
+            type="button"
+            aria-pressed={filter === name}
+            onClick={() => setFilter(name)}
+          >
+            {name}
+            <span>{counts[index]}</span>
+          </button>
+        ))}
+      </div>
+      {!filteredItems.length && (
+        <div className="empty">
+          <strong>No tools in this view.</strong>
+          <p>Choose another filter to explore your integrations.</p>
+        </div>
+      )}
       <div className="integration-grid">
-        {items.map((i) => (
+        {filteredItems.map((i) => (
           <section className="panel" key={i.id}>
             <div className="row">
               <h2>{i.name}</h2>

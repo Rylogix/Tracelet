@@ -28,8 +28,17 @@ test("public passkey signup, private real search, signout and account isolation"
   await passkey(page);
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Follow the public trail." }),
+    page.getByRole("heading", { name: "Your best start in free OSINT." }),
   ).toBeVisible();
+  if (process.env.TRACELET_SCREENSHOT)
+    await page.screenshot({
+      path:
+        process.env.TRACELET_SCREENSHOT +
+        "-signin-" +
+        test.info().project.name +
+        ".png",
+      fullPage: true,
+    });
   let registration: unknown;
   page.on("request", (request) => {
     if (request.url().endsWith("/api/auth/register/verify"))
@@ -41,7 +50,9 @@ test("public passkey signup, private real search, signout and account isolation"
     .getByRole("button", { name: "Create account with a passkey" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Every trail starts with a clue." }),
+    page.getByRole("heading", {
+      name: "Your free OSINT workspace.",
+    }),
   ).toBeVisible({ timeout: 30000 });
   expect(
     (
@@ -53,6 +64,14 @@ test("public passkey signup, private real search, signout and account isolation"
   ).toBe(400);
   await page.getByRole("button", { name: "Open my workspace" }).click();
   await page.getByLabel("Save to account", { exact: true }).check();
+  await page.keyboard.press("Control+k");
+  await expect(
+    page.getByLabel("What would you like to investigate?"),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "example.com", exact: true }).click();
+  await expect(
+    page.getByLabel("What would you like to investigate?"),
+  ).toHaveValue("example.com");
   await page
     .getByLabel("What would you like to investigate?")
     .fill("+442079460018");
@@ -60,7 +79,16 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });
-  await expect(page.getByText(/\"country\": \"GB\"/)).toBeVisible();
+  await expect(page.getByText("United Kingdom", { exact: true })).toBeVisible();
+  if (process.env.TRACELET_SCREENSHOT)
+    await page.screenshot({
+      path:
+        process.env.TRACELET_SCREENSHOT +
+        "-evidence-" +
+        test.info().project.name +
+        ".png",
+      fullPage: true,
+    });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -120,7 +148,9 @@ test("public passkey signup, private real search, signout and account isolation"
     .getByRole("button", { name: "Create account with a passkey" })
     .click();
   await expect(
-    p.getByRole("heading", { name: "Every trail starts with a clue." }),
+    p.getByRole("heading", {
+      name: "Your free OSINT workspace.",
+    }),
   ).toBeVisible({ timeout: 30000 });
   expect((await p.request.get("/api/search/" + id)).status()).toBe(404);
   expect(await (await p.request.get("/api/history")).json()).toEqual([]);
@@ -138,12 +168,14 @@ test("public passkey signup, private real search, signout and account isolation"
   await other.close();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Follow the public trail." }),
+    page.getByRole("heading", { name: "Your best start in free OSINT." }),
   ).toBeVisible();
   expect((await page.request.get("/api/history")).status()).toBe(401);
   await page.getByRole("button", { name: "Sign in with your passkey" }).click();
   await expect(
-    page.getByRole("heading", { name: "Every trail starts with a clue." }),
+    page.getByRole("heading", {
+      name: "Your free OSINT workspace.",
+    }),
   ).toBeVisible({ timeout: 30000 });
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
@@ -154,6 +186,39 @@ test("public passkey signup, private real search, signout and account isolation"
         ".png",
       fullPage: true,
     });
+  for (const route of ["/usage", "/settings/integrations", "/footprint"]) {
+    await page.goto(route);
+    await expect(page.locator('[aria-current="page"]:visible')).toHaveCount(1);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (route === "/settings/integrations") {
+      await page.getByRole("button", { name: /^Ready to use/ }).click();
+      await expect(
+        page.getByRole("button", { name: /^Ready to use/ }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect(
+        page.getByRole("heading", { name: "VirusTotal", exact: true }),
+      ).toHaveCount(0);
+      await page.getByRole("button", { name: /^All tools/ }).click();
+      await expect(
+        page.getByRole("heading", { name: "VirusTotal", exact: true }),
+      ).toBeVisible();
+    }
+    if (process.env.TRACELET_SCREENSHOT)
+      await page.screenshot({
+        path:
+          process.env.TRACELET_SCREENSHOT +
+          "-" +
+          route.replaceAll("/", "-") +
+          "-" +
+          test.info().project.name +
+          ".png",
+        fullPage: true,
+      });
+  }
   expect(
     (
       await page.request.delete("/api/account", {
@@ -206,7 +271,9 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     .getByRole("button", { name: "Create account with a passkey" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Every trail starts with a clue." }),
+    page.getByRole("heading", {
+      name: "Your free OSINT workspace.",
+    }),
   ).toBeVisible();
   const result = await page.request.post("/api/search", {
     headers: { "X-Tracelet-Client": "local-ui" },

@@ -4,37 +4,26 @@ import {
   startRegistration,
   startAuthentication,
 } from "@simplewebauthn/browser";
-import { Fingerprint, KeyRound, LogOut } from "lucide-react";
+import {
+  Fingerprint,
+  KeyRound,
+  ArrowRight,
+  ArrowUpRight,
+  ShieldCheck,
+  LockKeyhole,
+  ScanLine,
+  LoaderCircle,
+} from "lucide-react";
+import { Brand } from "./brand";
+import { TrailIllustration } from "./trail-illustration";
 import { Button } from "./ui/button";
 import { api } from "./api";
-const Runtime = createContext({ hosted: false, username: "" });
+const Runtime = createContext({
+  hosted: false,
+  username: "",
+  signOut: async () => {},
+});
 export const useRuntime = () => useContext(Runtime);
-export function RuntimeStatus() {
-  const { hosted, username } = useRuntime();
-  return (
-    <span className="local">
-      <i />
-      {hosted ? "Cloudflare · " + username : "Local instance"}
-    </span>
-  );
-}
-export function PrivacyCard() {
-  const { hosted } = useRuntime();
-  return (
-    <>
-      <strong>
-        {hosted ? "Your workspace. Your access." : "Your machine. Your data."}
-      </strong>
-      <p>
-        {hosted
-          ? "Private account storage on Cloudflare."
-          : "Local storage. No telemetry."}
-        <br />
-        Files stay on your device.
-      </p>
-    </>
-  );
-}
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<
     "loading" | "local" | "login" | "signed-in" | "error"
@@ -119,82 +108,169 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         <Button onClick={load}>Try again</Button>
       </div>
     );
+  async function signOut() {
+    await api("/auth/logout", { method: "POST", body: "{}" });
+    location.reload();
+  }
   if (status === "login")
     return (
-      <div className="auth-screen">
-        <section className="auth-card">
-          <span className="brand-icon">
-            <Fingerprint size={34} />
-          </span>
-          <div className="eyebrow mt-6">TRACELET / YOUR PRIVATE WORKSPACE</div>
-          <h1>Follow the public trail.</h1>
-          <p className="subtitle">
-            Free intelligence tools. Real sources. A workspace that belongs to
-            you.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void authenticate(true);
-            }}
+      <div className="auth-page">
+        <a className="skip-link" href="#signup-name">
+          Skip to sign in
+        </a>
+        <header className="auth-header">
+          <Brand />
+          <a
+            className="auth-github"
+            href="https://github.com/Rylogix/Tracelet"
+            target="_blank"
+            rel="noreferrer"
           >
-            <label htmlFor="signup-name">Choose your Tracelet username</label>
-            <input
-              id="signup-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              pattern="[A-Za-z0-9_-]{3,32}"
-              minLength={3}
-              maxLength={32}
-              autoComplete="username webauthn"
-              placeholder="Your username"
-              required
-            />
-            <Button disabled={busy} type="submit">
-              <KeyRound size={16} />
-              {busy ? "Check your device…" : "Create account with a passkey"}
-            </Button>
-          </form>
-          <div className="auth-divider">Already have an account?</div>
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={() => authenticate(false)}
-          >
-            Sign in with your passkey
-          </Button>
-          <p className="notice">
-            Use your device’s fingerprint, face unlock, or security key.
-            Tracelet never receives your biometric data. Keep your passkey
-            synced or backed up; email recovery is not available.
-          </p>
-          <p className="text-xs muted">
-            By continuing, you agree to use public information responsibly.
-            Hosted data is stored in the operator’s Cloudflare account. Files
-            are analyzed only in your browser.
-          </p>
-          {error && (
-            <div role="alert" className="error">
-              {error}
+            Free & open source <ArrowUpRight size={15} />
+          </a>
+        </header>
+        <div className="auth-layout">
+          <section className="auth-story">
+            <div className="auth-kicker">
+              <span className="status-dot" /> FREE & OPEN SOURCE
             </div>
-          )}
-        </section>
+            <h1 aria-label="Your best start in free OSINT.">
+              Your best start
+              <br />
+              <span>in free OSINT.</span>
+            </h1>
+            <p className="auth-lead">
+              Search public profiles, inspect domains, analyze files, and manage
+              your online presence.
+            </p>
+
+            <TrailIllustration />
+            <div className="auth-principles">
+              <span>
+                <ScanLine size={15} />
+                Source links
+              </span>
+              <span>
+                <LockKeyhole size={15} />
+                Private workspace
+              </span>
+              <span>
+                <ShieldCheck size={15} />
+                Encrypted API keys
+              </span>
+            </div>
+          </section>
+          <section className="auth-form-area">
+            <div className="auth-card">
+              <div className="auth-card-heading">
+                <span className="auth-card-icon">
+                  <Fingerprint size={24} />
+                </span>
+                <span className="auth-card-step">CREATE ACCOUNT</span>
+                <h2>Create your workspace</h2>
+                <p>
+                  Sign up to save investigations and connect your own API keys.
+                </p>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void authenticate(true);
+                }}
+              >
+                <label htmlFor="signup-name">
+                  Choose your Tracelet username
+                </label>
+                <div className="auth-input-wrap">
+                  <span>@</span>
+                  <input
+                    id="signup-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    pattern="[A-Za-z0-9_-]{3,32}"
+                    minLength={3}
+                    maxLength={32}
+                    autoComplete="username webauthn"
+                    placeholder="your-username"
+                    required
+                    disabled={busy}
+                  />
+                </div>
+                <p className="input-hint">
+                  3–32 characters. Letters, numbers, hyphens, or underscores.
+                </p>
+                <Button className="auth-primary" disabled={busy} type="submit">
+                  {busy ? (
+                    <LoaderCircle size={17} className="spin" />
+                  ) : (
+                    <KeyRound size={17} />
+                  )}{" "}
+                  {busy
+                    ? "Check your device…"
+                    : "Create account with a passkey"}
+                  {!busy && <ArrowRight size={16} />}
+                </Button>
+              </form>
+              <div className="auth-divider">
+                <span />
+                Already have an account?
+                <span />
+              </div>
+              <Button
+                className="auth-secondary"
+                variant="outline"
+                disabled={busy}
+                onClick={() => authenticate(false)}
+              >
+                Sign in with your passkey <ArrowRight size={16} />
+              </Button>
+              {error && (
+                <div role="alert" className="error">
+                  {error}
+                </div>
+              )}
+              <div className="passkey-explanation">
+                <ShieldCheck size={18} />
+                <div>
+                  <strong>Passkey authentication</strong>
+                  <p>
+                    Use Face ID, your fingerprint, or a security key. Your
+                    biometric data stays on your device.
+                  </p>
+                </div>
+              </div>
+              <p className="auth-recovery">
+                Keep your passkey synced or backed up. Email recovery is not
+                available.
+              </p>
+            </div>
+            <div className="auth-outside-note">
+              <LockKeyhole size={14} />
+              <p>
+                Investigations are private to your account.
+                <br />
+                File analysis happens entirely in your browser.
+              </p>
+            </div>
+          </section>
+        </div>
+        <footer className="auth-footer">
+          <span>© {new Date().getFullYear()} Tracelet</span>
+          <span>Free and open source</span>
+          <a
+            href="https://github.com/Rylogix/Tracelet"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Use public information responsibly <ArrowUpRight size={12} />
+          </a>
+        </footer>
       </div>
     );
   return (
-    <Runtime.Provider value={{ hosted: status === "signed-in", username }}>
-      {status === "signed-in" && (
-        <button
-          className="signout"
-          onClick={async () => {
-            await api("/auth/logout", { method: "POST", body: "{}" });
-            location.reload();
-          }}
-        >
-          <LogOut size={13} />
-          Sign out
-        </button>
-      )}
+    <Runtime.Provider
+      value={{ hosted: status === "signed-in", username, signOut }}
+    >
       {children}
     </Runtime.Provider>
   );

@@ -2,7 +2,9 @@ import { test, expect } from "@playwright/test";
 test("first run and real phone search", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Every trail starts with a clue." }),
+    page.getByRole("heading", {
+      name: "Your free OSINT workspace.",
+    }),
   ).toBeVisible();
   const welcome = page.getByRole("button", { name: "Open my workspace" });
   if (await welcome.isVisible()) await welcome.click();
@@ -13,7 +15,7 @@ test("first run and real phone search", async ({ page }) => {
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });
-  await expect(page.getByText(/\"country\": \"GB\"/)).toBeVisible();
+  await expect(page.getByText("United Kingdom", { exact: true })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -22,9 +24,7 @@ test("first run and real phone search", async ({ page }) => {
 });
 test("unknown quotas and credential controls", async ({ page }) => {
   await page.goto("/usage");
-  await expect(
-    page.getByRole("heading", { name: "Know what every request costs." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "API usage" })).toBeVisible();
   await expect(
     page.getByText("Unknown", { exact: true }).first(),
   ).toBeVisible();
