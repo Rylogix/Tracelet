@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import { Plug, KeyRound, ExternalLink } from "lucide-react";
 import { api, type Integration } from "@/components/api";
 import { Button } from "@/components/ui/button";
+import { useRuntime } from "@/components/auth-gate";
 export default function Integrations() {
+  const { hosted } = useRuntime();
   const [filter, setFilter] = useState("All tools");
   const [items, setItems] = useState<Integration[]>([]);
   const [keys, setKeys] = useState<Record<string, string>>({});
@@ -189,6 +191,14 @@ export default function Integrations() {
           </section>
         ))}
       </div>
+      {hosted && <details className="panel mt-8">
+        <summary>Account</summary>
+        <Button variant="outline" onClick={async () => {
+          if (!window.confirm("Permanently delete your Tracelet account and all associated data?")) return;
+          try { await api("/account", { method: "DELETE" }); location.reload(); }
+          catch (e) { setMessage((e as Error).message); }
+        }}>Delete my account and data</Button>
+      </details>}
     </>
   );
 }

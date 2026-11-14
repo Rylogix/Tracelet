@@ -59,6 +59,8 @@ test("public passkey signup, private real search, signout and account isolation"
       })
     ).status(),
   ).toBe(400);
+  await expect(page.getByRole("link", { name: /footprint/i })).toHaveCount(0);
+  expect((await page.request.get("/api/footprint")).status()).toBe(404);
   await page.getByLabel("Save to account", { exact: true }).check();
   await page.keyboard.press("Control+k");
   await expect(page.getByLabel("Search", { exact: true })).toBeFocused();
@@ -163,7 +165,7 @@ test("public passkey signup, private real search, signout and account isolation"
         ".png",
       fullPage: true,
     });
-  for (const route of ["/usage", "/settings/integrations", "/footprint"]) {
+  for (const route of ["/usage", "/settings/integrations"]) {
     await page.goto(route);
     await expect(page.locator('[aria-current="page"]:visible')).toHaveCount(1);
     expect(

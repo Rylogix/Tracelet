@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search,
-  Fingerprint,
   Activity,
   SlidersHorizontal,
   ArrowUpRight,
@@ -16,12 +15,6 @@ import { Brand } from "./brand";
 import { useRuntime } from "./auth-gate";
 const links = [
   { href: "/", label: "Investigate", short: "Search", icon: Search },
-  {
-    href: "/footprint",
-    label: "Digital footprint",
-    short: "Footprint",
-    icon: Fingerprint,
-  },
   { href: "/usage", label: "API usage", short: "Usage", icon: Activity },
   {
     href: "/settings/integrations",

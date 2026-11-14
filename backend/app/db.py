@@ -23,12 +23,13 @@ def initialize():
         CREATE TABLE IF NOT EXISTS investigations(id TEXT PRIMARY KEY, query TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL, payload TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS credentials(provider TEXT PRIMARY KEY, encrypted TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS usage(provider TEXT PRIMARY KEY, attempts INTEGER NOT NULL DEFAULT 0, successes INTEGER NOT NULL DEFAULT 0, failures INTEGER NOT NULL DEFAULT 0, last_success TEXT, last_update TEXT, quota_limit REAL, remaining REAL, reset TEXT, confirmed INTEGER NOT NULL DEFAULT 0, blocked_until REAL NOT NULL DEFAULT 0, budget INTEGER);
-        CREATE TABLE IF NOT EXISTS ownership(profile_id TEXT PRIMARY KEY, challenge TEXT NOT NULL, verified INTEGER NOT NULL DEFAULT 0, monitoring INTEGER NOT NULL DEFAULT 0, interval_hours INTEGER NOT NULL DEFAULT 24, last_scan TEXT, snapshot TEXT);
-        CREATE TABLE IF NOT EXISTS alerts(id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, created TEXT NOT NULL, message TEXT NOT NULL);
         INSERT OR IGNORE INTO migrations VALUES(2);
         CREATE TABLE IF NOT EXISTS provider_cache(provider TEXT NOT NULL,query TEXT NOT NULL,payload TEXT NOT NULL,expires REAL NOT NULL,PRIMARY KEY(provider,query));
         INSERT OR IGNORE INTO migrations VALUES(3);
-        CREATE TABLE IF NOT EXISTS footprint(id TEXT PRIMARY KEY, url TEXT NOT NULL, username TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL);
+        DROP TABLE IF EXISTS ownership;
+        DROP TABLE IF EXISTS alerts;
+        DROP TABLE IF EXISTS footprint;
+        INSERT OR IGNORE INTO migrations VALUES(4);
         """)
         db.execute("DELETE FROM provider_cache WHERE expires<?", (time.time(),))
 

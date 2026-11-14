@@ -65,3 +65,7 @@ For deterministic Workers tests without real external requests, run `npm test` w
 - Applied D1 migration 0002 and deployed Worker version 8dca6aac-ad45-4cb6-b492-554c07355402.
 
 The interface uses compact sign-in/create-account actions, a single search field, type filters and expandable technical details. Native Sherlock/Maigret remain disabled; the hosted username engine uses the documented public API catalog. No claim of exhaustive internet coverage is made. External provider availability is checked per request.
+
+## Footprint removal — 2026-11-14
+
+Removed the page, navigation, API routes, verification and scheduled monitoring. Migration 0003 removes hosted footprint records and alerts; local migration 4 removes footprint, ownership and alerts tables. Account deletion remains in Settings. Python: 18 passed. Worker: 81 passed, 2 optional live tests skipped. Hosted desktop/mobile browser checks: 4 passed. Static build and TypeScript passed.

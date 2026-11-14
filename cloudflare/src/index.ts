@@ -1,8 +1,8 @@
 import { platforms, scanProfiles, type ProfileCheck } from "./usernames";
 import { auth, owner as identify, json, type AuthEnv } from "./auth";
-import { detect, domain, encrypt, githubHandle } from "./security";
+import { detect, domain, encrypt } from "./security";
 import { registry } from "./registry";
-import { adapter, external, type ProviderEnv, type Finding } from "./providers";
+import { adapter, type ProviderEnv, type Finding } from "./providers";
 interface Env extends AuthEnv, ProviderEnv {
   ASSETS: Fetcher;
 }
@@ -510,167 +510,6 @@ async function routes(
       },
       400,
     );
-  if (path === "/api/footprint") {
-    if (method === "POST") {
-      const body = (await request.json()) as { username: string; url: string };
-      if (
-        typeof body.username !== "string" ||
-        body.username.length < 1 ||
-        body.username.length > 80 ||
-        typeof body.url !== "string" ||
-        body.url.length > 500
-      )
-        return json(
-          { detail: "Enter a username and public profile URL." },
-          422,
-        );
-      try {
-        domain(body.url);
-      } catch {
-        return json({ detail: "Public profile URL required" }, 422);
-      }
-      const item = {
-        id: crypto.randomUUID(),
-        url: body.url.includes("://") ? body.url : "https://" + body.url,
-        username: body.username,
-        status: "unverified",
-        created: stamp(),
-      };
-      await env.DB.prepare(
-        "INSERT INTO footprint(id,owner,url,username,status,created) VALUES(?,?,?,?,?,?)",
-      )
-        .bind(
-          item.id,
-          owner,
-          item.url,
-          item.username,
-          item.status,
-          item.created,
-        )
-        .run();
-      return json(item);
-    }
-    return json(
-      (
-        await env.DB.prepare(
-          "SELECT id,url,username,status,created,challenge,monitoring,interval_hours,last_scan FROM footprint WHERE owner=? ORDER BY created DESC",
-        )
-          .bind(owner)
-          .all()
-      ).results,
-    );
-  }
-  const profile = path.match(
-    /^\/api\/footprint\/([^/]+)(?:\/(challenge|verify|monitoring))?$/,
-  );
-  if (profile) {
-    const row = await env.DB.prepare(
-      "SELECT * FROM footprint WHERE id=? AND owner=?",
-    )
-      .bind(profile[1], owner)
-      .first<Record<string, any>>();
-    if (!row) return json({ detail: "Profile not found" }, 404);
-    if (!profile[2] && method === "DELETE") {
-      await env.DB.batch([
-        env.DB.prepare("DELETE FROM footprint WHERE id=? AND owner=?").bind(
-          profile[1],
-          owner,
-        ),
-        env.DB.prepare(
-          "DELETE FROM alerts WHERE profile_id=? AND owner=?",
-        ).bind(profile[1], owner),
-      ]);
-      return json({ ok: true });
-    }
-    const handle = githubHandle(row.url);
-    if (!handle)
-      return json(
-        {
-          detail:
-            "Ownership verification currently supports GitHub profile URLs only.",
-        },
-        400,
-      );
-    if (profile[2] === "challenge" && method === "POST") {
-      const token = "tracelet-verify-" + crypto.randomUUID();
-      await env.DB.prepare(
-        "UPDATE footprint SET challenge=?,status='unverified',monitoring=0 WHERE id=? AND owner=?",
-      )
-        .bind(token, row.id, owner)
-        .run();
-      return json({
-        challenge: token,
-        instructions:
-          "Temporarily add this token to your public GitHub bio, then click Verify.",
-      });
-    }
-    if (profile[2] === "verify" && method === "POST") {
-      if (!row.challenge)
-        return json({ detail: "Generate a challenge first." }, 400);
-      try {
-        const data = await external(
-          env,
-          owner,
-          "github",
-          "https://api.github.com/users/" + encodeURIComponent(handle),
-          { Accept: "application/vnd.github+json" },
-        );
-        if (!data.bio?.includes(row.challenge))
-          return json(
-            {
-              detail:
-                "Verification token was not found in the public profile bio.",
-            },
-            400,
-          );
-        await env.DB.prepare(
-          "UPDATE footprint SET status='verified',snapshot=?,last_scan=? WHERE id=? AND owner=?",
-        )
-          .bind(JSON.stringify(profileSnapshot(data)), stamp(), row.id, owner)
-          .run();
-        return json({ verified: true });
-      } catch (e) {
-        return json({ detail: (e as Error).message }, 400);
-      }
-    }
-    if (profile[2] === "monitoring" && method === "PUT") {
-      const body = (await request.json()) as {
-        enabled: boolean;
-        interval_hours?: number;
-      };
-      if (row.status !== "verified")
-        return json(
-          { detail: "Verify ownership before enabling monitoring." },
-          400,
-        );
-      const hours = body.interval_hours ?? 24;
-      if (!Number.isInteger(hours) || hours < 24 || hours > 8760)
-        return json({ detail: "Choose an interval of 24–8760 hours." }, 422);
-      await env.DB.prepare(
-        "UPDATE footprint SET monitoring=?,interval_hours=? WHERE id=? AND owner=?",
-      )
-        .bind(body.enabled ? 1 : 0, hours, row.id, owner)
-        .run();
-      return json({ ok: true });
-    }
-  }
-  if (path === "/api/alerts") {
-    if (method === "DELETE") {
-      await env.DB.prepare("DELETE FROM alerts WHERE owner=?")
-        .bind(owner)
-        .run();
-      return json({ ok: true });
-    }
-    return json(
-      (
-        await env.DB.prepare(
-          "SELECT id,profile_id,created,message FROM alerts WHERE owner=? ORDER BY created DESC LIMIT 100",
-        )
-          .bind(owner)
-          .all()
-      ).results,
-    );
-  }
   if (path === "/api/account" && method === "DELETE") {
     await env.DB.batch(
       [
@@ -678,8 +517,6 @@ async function routes(
         "jobs",
         "credentials",
         "usage",
-        "footprint",
-        "alerts",
         "quota_alert_settings",
         "passkeys",
         "sessions",
@@ -697,14 +534,6 @@ async function routes(
     });
   }
   return json({ detail: "Endpoint not found" }, 404);
-}
-function profileSnapshot(data: Record<string, unknown>) {
-  return Object.fromEntries(
-    ["login", "bio", "name", "blog", "public_repos"].map((k) => [
-      k,
-      data[k] ?? null,
-    ]),
-  );
 }
 const worker = {
   async fetch(
@@ -797,40 +626,7 @@ const worker = {
         Date.now(),
       ),
     ]);
-    const profiles = await env.DB.prepare(
-      "SELECT * FROM footprint WHERE monitoring=1 AND status='verified' AND (last_scan IS NULL OR julianday('now')-julianday(last_scan)>=interval_hours/24.0) ORDER BY last_scan LIMIT 10",
-    ).all<Record<string, any>>();
-    for (const profile of profiles.results) {
-      const handle = githubHandle(profile.url);
-      if (!handle) continue;
-      try {
-        const data = await external(
-          env,
-          profile.owner,
-          "github",
-          "https://api.github.com/users/" + encodeURIComponent(handle),
-          { Accept: "application/vnd.github+json" },
-        );
-        const snapshot = JSON.stringify(profileSnapshot(data));
-        if (profile.snapshot && profile.snapshot !== snapshot)
-          await env.DB.prepare("INSERT INTO alerts VALUES(?,?,?,?,?)")
-            .bind(
-              crypto.randomUUID(),
-              profile.owner,
-              profile.id,
-              stamp(),
-              "Your verified public GitHub profile changed. Review your account directly.",
-            )
-            .run();
-        await env.DB.prepare(
-          "UPDATE footprint SET snapshot=?,last_scan=? WHERE id=? AND owner=?",
-        )
-          .bind(snapshot, stamp(), profile.id, profile.owner)
-          .run();
-      } catch {
-        /* Availability and quotas govern the next scheduled attempt. */
-      }
-    }
+
   },
 };
 

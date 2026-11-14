@@ -1,7 +1,6 @@
 from typing import Literal
 import asyncio
 import json
-import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -28,12 +27,7 @@ async def lifespan(app):
         conn.execute(
             "DELETE FROM investigations WHERE julianday('now') - julianday(created) > 30"
         )
-    from .monitoring import monitor_loop
-
-    monitor = asyncio.create_task(monitor_loop())
     yield
-    monitor.cancel()
-    await asyncio.gather(monitor, return_exceptions=True)
     for task in list(TASKS.values()):
         task.cancel()
     await asyncio.gather(*TASKS.values(), return_exceptions=True)
@@ -87,16 +81,6 @@ class Budget(BaseModel):
 
 class Setup(BaseModel):
     history: bool = False
-
-
-class Monitoring(BaseModel):
-    enabled: bool = False
-    interval_hours: int = Field(default=24, ge=24, le=8760)
-
-
-class Profile(BaseModel):
-    url: str = Field(max_length=500)
-    username: str = Field(min_length=1, max_length=80)
 
 
 def save(job):
@@ -466,138 +450,6 @@ async def file_analysis(file: UploadFile = File(...)):
             "Analyzed in an isolated subprocess. No upload retained. Metadata may contain personal information."
         ],
     }
-
-
-@app.get("/api/footprint")
-def get_footprint():
-    with db.connect() as conn:
-        return [
-            dict(row)
-            for row in conn.execute(
-                "SELECT f.*,o.challenge,o.monitoring,o.interval_hours,o.last_scan FROM footprint f LEFT JOIN ownership o ON f.id=o.profile_id ORDER BY f.created DESC"
-            )
-        ]
-
-
-@app.post("/api/footprint")
-async def add_footprint(value: Profile):
-    try:
-        await asyncio.to_thread(public_domain, value.url)
-    except (ValueError, OSError):
-        raise HTTPException(422, "Enter a public profile URL.") from None
-    item = dict(
-        id=str(uuid.uuid4()),
-        url=value.url if "://" in value.url else "https://" + value.url,
-        username=value.username,
-        status="unverified",
-        created=now(),
-    )
-    with db.connect() as conn:
-        conn.execute("INSERT INTO footprint VALUES(?,?,?,?,?)", tuple(item.values()))
-    return item
-
-
-@app.delete("/api/footprint/{profile_id}")
-def delete_profile(profile_id: str):
-    with db.connect() as conn:
-        conn.execute("DELETE FROM footprint WHERE id=?", (profile_id,))
-        conn.execute("DELETE FROM ownership WHERE profile_id=?", (profile_id,))
-        conn.execute("DELETE FROM alerts WHERE profile_id=?", (profile_id,))
-    return {"ok": True}
-
-
-@app.post("/api/footprint/{profile_id}/challenge")
-def issue_challenge(profile_id: str):
-    from .monitoring import github_handle
-
-    with db.connect() as conn:
-        profile = conn.execute(
-            "SELECT * FROM footprint WHERE id=?", (profile_id,)
-        ).fetchone()
-        if not profile:
-            raise HTTPException(404, "Profile not found")
-        if not github_handle(profile["url"]):
-            raise HTTPException(
-                400, "Ownership verification currently supports GitHub profiles only."
-            )
-        challenge = "tracelet-verify-" + secrets.token_urlsafe(18)
-        conn.execute(
-            "INSERT OR REPLACE INTO ownership(profile_id,challenge) VALUES(?,?)",
-            (profile_id, challenge),
-        )
-        conn.execute(
-            "UPDATE footprint SET status='unverified' WHERE id=?", (profile_id,)
-        )
-    return {
-        "challenge": challenge,
-        "instructions": "Temporarily add this exact token to your public GitHub bio, then click Verify.",
-    }
-
-
-@app.post("/api/footprint/{profile_id}/verify")
-async def verify_profile(profile_id: str):
-    from .monitoring import github_handle, fetch_profile
-
-    with db.connect() as conn:
-        profile = conn.execute(
-            "SELECT f.*,o.challenge FROM footprint f JOIN ownership o ON f.id=o.profile_id WHERE f.id=?",
-            (profile_id,),
-        ).fetchone()
-    if not profile:
-        raise HTTPException(400, "Generate an ownership challenge first.")
-    try:
-        data = await fetch_profile(github_handle(profile["url"]))
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from None
-    if profile["challenge"] not in (data.get("bio") or ""):
-        raise HTTPException(
-            400, "Verification token was not found in this profile’s public GitHub bio."
-        )
-    with db.connect() as conn:
-        conn.execute("UPDATE footprint SET status='verified' WHERE id=?", (profile_id,))
-        conn.execute(
-            "UPDATE ownership SET verified=1,snapshot=?,last_scan=? WHERE profile_id=?",
-            (json.dumps(data, sort_keys=True), now(), profile_id),
-        )
-    return {
-        "verified": True,
-        "note": "Proof of public profile control observed. You may now remove the token.",
-    }
-
-
-@app.put("/api/footprint/{profile_id}/monitoring")
-def monitoring(profile_id: str, value: Monitoring):
-    with db.connect() as conn:
-        row = conn.execute(
-            "SELECT verified FROM ownership WHERE profile_id=?", (profile_id,)
-        ).fetchone()
-        if not row or not row["verified"]:
-            raise HTTPException(
-                400, "Verify account ownership before enabling monitoring."
-            )
-        conn.execute(
-            "UPDATE ownership SET monitoring=?,interval_hours=? WHERE profile_id=?",
-            (value.enabled, value.interval_hours, profile_id),
-        )
-    return {"ok": True, "enabled": value.enabled}
-
-
-@app.get("/api/alerts")
-def alerts():
-    with db.connect() as conn:
-        return [
-            dict(row)
-            for row in conn.execute(
-                "SELECT * FROM alerts ORDER BY created DESC LIMIT 100"
-            )
-        ]
-
-
-@app.delete("/api/alerts")
-def clear_alerts():
-    with db.connect() as conn:
-        conn.execute("DELETE FROM alerts")
-    return {"ok": True}
 
 
 class AlertSettings(BaseModel):

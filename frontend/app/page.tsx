@@ -12,7 +12,6 @@ import {
   Phone,
   FileSearch,
   Globe,
-  Fingerprint,
   ShieldCheck,
   Sparkles,
   Upload,
@@ -63,13 +62,7 @@ const categories = [
     example: "example.com",
     note: "Public domains only. No active security scanning.",
   },
-  {
-    name: "My digital footprint",
-    icon: Fingerprint,
-    description: "Save your accounts and monitor verified profiles.",
-    example: "",
-    note: "",
-  },
+
 ];
 type History = {
   id: string;

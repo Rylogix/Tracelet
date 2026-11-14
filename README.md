@@ -12,7 +12,6 @@ A free, open-source OSINT workspace for public information, with real sources an
 - Background searches, live progress, cancellation, source links, timestamps, confidence labels and JSON exports.
 - Opt-in history, private investigation storage, API-key encryption, manual connect/disconnect/test controls.
 - API usage dashboard with atomic counters, provider headers when present, honest unknown values, retry-after cooldowns and personal budgets.
-- GitHub footprint proof of control via public bio challenge, opt-in daily monitoring and in-app change alerts.
 - Cloudflare: public passkey signup/login, HttpOnly sessions and account-isolated D1 storage. No paid authentication service required.
 - Local: Python/FastAPI, SQLite, auto-generated encryption key, Windows/macOS/Linux launchers and Docker Compose.
 

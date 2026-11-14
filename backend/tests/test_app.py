@@ -180,69 +180,6 @@ def test_concurrent_budget_atomic(client, monkeypatch):
     assert row["source"] == "provider headers"
 
 
-def test_footprint_never_claims_verified(client, monkeypatch):
-    monkeypatch.setattr("app.main.public_domain", lambda url: "example.com")
-    response = client.post(
-        "/api/footprint",
-        json={"username": "mine", "url": "https://example.com/me"},
-        headers=HEADERS,
-    )
-    assert response.json()["status"] == "unverified"
-    assert (
-        client.delete(
-            "/api/footprint/" + response.json()["id"], headers=HEADERS
-        ).status_code
-        == 200
-    )
-
-
-def test_monitoring_requires_ownership_proof(client, monkeypatch):
-    monkeypatch.setattr("app.main.public_domain", lambda url: "github.com")
-    profile = client.post(
-        "/api/footprint",
-        json={"username": "mine", "url": "https://github.com/mine"},
-        headers=HEADERS,
-    ).json()
-    assert (
-        client.put(
-            "/api/footprint/" + profile["id"] + "/monitoring",
-            json={"enabled": True},
-            headers=HEADERS,
-        ).status_code
-        == 400
-    )
-    token = client.post(
-        "/api/footprint/" + profile["id"] + "/challenge", headers=HEADERS
-    ).json()["challenge"]
-
-    async def no_token(handle):
-        return {"login": "mine", "bio": "unrelated"}
-
-    monkeypatch.setattr("app.monitoring.fetch_profile", no_token)
-    assert (
-        client.post(
-            "/api/footprint/" + profile["id"] + "/verify", headers=HEADERS
-        ).status_code
-        == 400
-    )
-
-    async def valid(handle):
-        return {"login": "mine", "bio": token}
-
-    monkeypatch.setattr("app.monitoring.fetch_profile", valid)
-    assert client.post(
-        "/api/footprint/" + profile["id"] + "/verify", headers=HEADERS
-    ).json()["verified"]
-    assert (
-        client.put(
-            "/api/footprint/" + profile["id"] + "/monitoring",
-            json={"enabled": True},
-            headers=HEADERS,
-        ).status_code
-        == 200
-    )
-
-
 def test_configurable_usage_alerts(client):
     assert (
         client.put(
