@@ -44,3 +44,13 @@ For deterministic Workers tests without real external requests, run `npm test` w
 - Temporary production test accounts and their data were removed through the account-deletion API.
 - Production test requests use the environment's required outbound proxy. Synthetic CF-Connecting-IP headers remain limited to local tests: sending them to Cloudflare itself correctly triggers Cloudflare error 1000. No zone security settings were weakened to run tests.
 - The app's native tool and integration limitations remain as documented in INTEGRATIONS.md. Native Windows/macOS and real-device passkey testing remain outstanding.
+
+## Matte charcoal interface update — 2026-11-14
+
+- Replaced the interface with matte charcoal surfaces, white controls/icons/outlines, and color restricted to compact provider-status and confidence indicators. Removed promotional filler outside the signup and workspace hero headlines.
+- Added self-hosted Inter/Manrope fonts, a shared active-navigation shell, mobile bottom navigation, keyboard search focus, integration availability filters, readable evidence properties, and expandable original source data. Search/export data and server access controls are unchanged.
+- Next.js static-export and local production builds, Workers dry-run, and npm dependency audit passed.
+- Desktop/mobile hosted browser checks passed, including passkeys, real phone results, shortcut/example controls, active navigation, integration filters and overflow checks on usage/integrations/footprint. Local browser checks passed after starting the local test API; the initial local attempt reached the UI before that API was running.
+- Three production browser checks passed at https://tracelet.rylogix.com, including real DNS/RDAP queries, credential/account isolation, image analysis without uploads, and the redesigned routes. Temporary test accounts were deleted.
+- Live sign-in layout inspected at 320, 390, 768, 1024 and 1440 pixels. Visual captures reviewed for desktop/mobile sign-in, workspace, and evidence cards.
+- Deployment preserved the existing production database and encryption secret.
