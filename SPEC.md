@@ -4,7 +4,7 @@
 
 Make public intelligence gathering accessible through six categories: Username, Email, Phone, Files, Website, and My Digital Footprint. Never fabricate findings. Preserve evidence, observation times, limitations and confidence. Similar usernames are possible matches, not proof of shared identity.
 
-The original local-first specification remains supported. The owner subsequently requested a website running entirely in their Cloudflare account under `rylogix.tracelet.com`, with public signup. Accordingly the hosted mode uses Workers + D1 and browser file processing. It cannot execute native tools or Python subprocesses. Hosted account storage is explicitly disclosed. The local mode keeps Next.js + FastAPI + SQLite and Docker Compose.
+The original local-first specification remains supported. The owner subsequently requested a website running entirely in their Cloudflare account under `tracelet.rylogix.com`, with public signup. Accordingly the hosted mode uses Workers + D1 and browser file processing. It cannot execute native tools or Python subprocesses. Hosted account storage is explicitly disclosed. The local mode keeps Next.js + FastAPI + SQLite and Docker Compose.
 
 ## Functional contract
 

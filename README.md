@@ -2,7 +2,7 @@
 
 A free, open-source OSINT workspace for public information, with real sources and transparent API usage. Dark, responsive Next.js interface with purple accents.
 
-**Two deployment modes:** a public-signup Cloudflare website at your own domain, or a private local installation. The hosted edition targets **https://rylogix.tracelet.com**. That URL is a deployment target, not an assertion that the site is live.
+**Two deployment modes:** a public-signup Cloudflare website at your own domain, or a private local installation. The hosted edition is live at **https://tracelet.rylogix.com**.
 
 ## What works
 
@@ -20,7 +20,7 @@ A free, open-source OSINT workspace for public information, with real sources an
 
 ## Run as a Cloudflare website
 
-See [Cloudflare deployment](docs/CLOUDFLARE.md). Uses Workers static assets + Workers API + D1; no Python server or mandatory paid API. Public signup uses passkeys. The operator must control `tracelet.com` in the chosen Cloudflare account to attach `rylogix.tracelet.com`.
+See [Cloudflare deployment](docs/CLOUDFLARE.md). Uses Workers static assets + Workers API + D1; no Python server or mandatory paid API. Public signup uses passkeys. The operator must control `rylogix.com` in the chosen Cloudflare account to attach `tracelet.rylogix.com`.
 
 Cloudflare platform quotas still apply. A public service cannot promise unlimited free capacity. The hosted edition stores account data in Cloudflare, rather than on each visitor's local disk. File contents stay in the browser.
 

@@ -1,8 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 test.beforeEach(async ({ context }) => {
-  await context.setExtraHTTPHeaders({
-    "CF-Connecting-IP": "192.0.2." + (1 + Math.floor(Math.random() * 254)),
-  });
+  if (!process.env.TRACELET_BASE_URL)
+    await context.setExtraHTTPHeaders({
+      "CF-Connecting-IP": "192.0.2." + (1 + Math.floor(Math.random() * 254)),
+    });
 });
 async function passkey(page: Page) {
   const cdp = await page.context().newCDPSession(page);
@@ -101,9 +102,13 @@ test("public passkey signup, private real search, signout and account isolation"
   );
   expect(uploads).toHaveLength(0);
   const other = await browser.newContext({
-    extraHTTPHeaders: {
-      "CF-Connecting-IP": "198.51.100." + (1 + Math.floor(Math.random() * 254)),
-    },
+    proxy: test.info().project.use.proxy,
+    extraHTTPHeaders: process.env.TRACELET_BASE_URL
+      ? {}
+      : {
+          "CF-Connecting-IP":
+            "198.51.100." + (1 + Math.floor(Math.random() * 254)),
+        },
   });
   const p = await other.newPage();
   await passkey(p);
@@ -123,6 +128,13 @@ test("public passkey signup, private real search, signout and account isolation"
   expect(
     providers.find((i: { id: string }) => i.id === "virustotal").connected,
   ).toBe(false);
+  expect(
+    (
+      await p.request.delete("/api/account", {
+        headers: { "X-Tracelet-Client": "local-ui" },
+      })
+    ).status(),
+  ).toBe(200);
   await other.close();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
@@ -136,9 +148,19 @@ test("public passkey signup, private real search, signout and account isolation"
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
-        process.env.TRACELET_SCREENSHOT + "-" + test.info().project.name + ".png",
+        process.env.TRACELET_SCREENSHOT +
+        "-" +
+        test.info().project.name +
+        ".png",
       fullPage: true,
     });
+  expect(
+    (
+      await page.request.delete("/api/account", {
+        headers: { "X-Tracelet-Client": "local-ui" },
+      })
+    ).status(),
+  ).toBe(200);
 });
 test("rejects unauthenticated mutations and cross-origin calls", async ({
   request,
@@ -198,6 +220,13 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     job = await (await page.request.get("/api/search/" + initial.id)).json();
     if (!["running", "queued"].includes(job.status)) break;
   }
+  expect(
+    (
+      await page.request.delete("/api/account", {
+        headers: { "X-Tracelet-Client": "local-ui" },
+      })
+    ).status(),
+  ).toBe(200);
   expect(job.errors).toEqual([]);
   expect(
     job.findings.some(

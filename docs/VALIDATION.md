@@ -14,13 +14,13 @@
 
 ## Observed limitations
 
-- The initial direct local-Worker live-network test failed because this execution environment requires an outbound proxy that workerd does not use automatically. It also caught an unsupported redirect option, which was fixed to `manual`. The final live adapter checks use Node's official proxy-aware fetch transport plus real Miniflare D1, not fabricated responses. Production Cloudflare-origin network behavior still needs a post-deployment smoke test. The optional `TRACELET_LIVE=1` browser-network smoke is separate from deterministic CI and may fail in proxy-constrained local environments.
+- The initial direct local-Worker live-network test failed because this execution environment requires an outbound proxy that workerd does not use automatically. It also caught an unsupported redirect option, which was fixed to `manual`. The final live adapter checks use Node's official proxy-aware fetch transport plus real Miniflare D1, not fabricated responses. The later production checks below passed Cloudflare-origin networking. The optional `TRACELET_LIVE=1` browser-network smoke is separate from deterministic CI and may fail in proxy-constrained local environments.
 - The complete Docker build reached frontend compilation/type-check/static generation but could not finish in this machine's small filesystem (`ENOSPC` during standalone packaging). Backend image creation succeeded. A full Compose runtime smoke is not claimed. Container builds behind this environment's TLS-inspecting proxy used a temporary BuildKit CA secret, without disabling TLS verification; that local override is not shipped.
 - No live VirusTotal/AbuseIPDB credentials were available. Keys remain **Connection test required** until a user's real connection test succeeds. Replacing a key invalidates prior connection-test health. AbuseIPDB remains disabled.
 - Sherlock, Maigret and ExifTool have no validated runtime adapter in this release and remain disabled. No claim is made about their current upstream maintenance or compatibility.
 - Native Windows/macOS installation, real-device passkeys, production Cron delivery and an independent security audit remain outstanding.
-- GitHub repository creation returned `Resource not accessible by integration (createRepository)`. A subsequent read did not find Rylogix/Tracelet. No remote repository was created or pushed.
-- Wrangler reported no authenticated Cloudflare account. No D1 database, deployment secret, custom domain, production deployment or public release was created remotely.
+- The initial GitHub repository-creation token lacked permission. The owner subsequently created Rylogix/Tracelet, and the tested source was pushed successfully.
+- Direct Wrangler login was initially unavailable. The owner later authorized Cloudflare’s official MCP connection and the production resources were deployed through it, as recorded below.
 
 ## Commands
 
@@ -35,3 +35,12 @@ cd ../frontend && npx playwright test --config playwright.cloudflare.config.ts
 ```
 
 For deterministic Workers tests without real external requests, run `npm test` without `TRACELET_LIVE`. The optional real-provider test is explicitly skipped. No test fixture is used as a real application result.
+
+## Production deployment — 2026-11-14
+
+- Live URL: https://tracelet.rylogix.com, using the owner's active rylogix.com zone.
+- Worker `tracelet`, a new dedicated D1 database, migrated schema, hourly schedule, custom-domain TLS, and an application-owned AES-GCM encryption secret are deployed. Secret material was generated inside Cloudflare and not returned in logs or committed.
+- **Three production Playwright checks passed** against the actual HTTPS domain: public passkey signup, replay rejection, sign-out/sign-in, real phone lookup, account and credential isolation, browser-only image metadata with no upload; unauthenticated/cross-origin rejection; and real DNS plus RDAP queries for example.com.
+- Temporary production test accounts and their data were removed through the account-deletion API.
+- Production test requests use the environment's required outbound proxy. Synthetic CF-Connecting-IP headers remain limited to local tests: sending them to Cloudflare itself correctly triggers Cloudflare error 1000. No zone security settings were weakened to run tests.
+- The app's native tool and integration limitations remain as documented in INTEGRATIONS.md. Native Windows/macOS and real-device passkey testing remain outstanding.
