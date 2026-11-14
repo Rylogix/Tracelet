@@ -66,10 +66,20 @@ npx playwright test --config playwright.cloudflare.config.ts
 
 The test config uses local Wrangler/D1 at http://localhost:8787 and a Chromium virtual authenticator. These are real WebAuthn operations against the running application. Unit tests are separate: `cd cloudflare && npm test`. No production bypass account or fake identity is added to the application.
 
-## Optional GitHub automatic deploy
+## Deploy from mobile using GitHub Actions
 
-A deployment workflow is provided under `.github/workflows/deploy-cloudflare.yml`. Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` through GitHub settings, with Workers Scripts edit, D1 edit and required zone permissions scoped to the intended account/zone. Configure the D1 ID first. Store `ENCRYPTION_KEY` in Cloudflare through Wrangler before the first deploy. Trigger the workflow manually after checks pass. The workflow does not echo secrets or generate shared provider keys.
+No local terminal is required for this route.
 
-## Remaining access needed in this session
+1. Confirm `tracelet.com` is an active zone in your Cloudflare account. The configured address is `rylogix.tracelet.com`.
+2. In Cloudflare, copy your Account ID from the account dashboard.
+3. Open https://dash.cloudflare.com/profile/api-tokens and create a custom API token. Grant Account → Workers Scripts → Edit, Account → D1 → Edit, Zone → Workers Routes → Edit, Zone → DNS → Edit, and Zone → Zone → Read. Scope account resources to the chosen account and zone resources to `tracelet.com`.
+4. In https://github.com/Rylogix/Tracelet/settings/secrets/actions add two **repository secrets**, named exactly `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Never paste the token into chat or source code.
+5. Open https://github.com/Rylogix/Tracelet/actions/workflows/deploy-cloudflare.yml, choose **Run workflow**, and run branch **main**. On a small screen, GitHub's desktop-site browser mode may make this control easier to find.
 
-The connected GitHub token rejected `createRepository`. No Cloudflare authorization was available when the deployment was prepared. Local builds/tests do not establish that the domain, D1 database, encryption secret or repository were created remotely.
+The workflow checks the code, creates or reuses a D1 database named `tracelet`, configures the returned database ID for that deployment, applies migrations, publishes the Worker and custom domain, and generates a deployment-owned encryption key only when one does not already exist. Subsequent deploys preserve the database and key. The generated key is sent directly to Cloudflare secret storage; it is never printed or committed. No database ID or environment file needs manual editing for this path.
+
+After the workflow succeeds, visit https://rylogix.tracelet.com and create your passkey account. If it fails, inspect the failing step; a domain/zone error usually means the chosen account does not control `tracelet.com`, while a 403 usually means a missing token permission or resource scope. The API-key settings remain unavailable until encryption-key provisioning completes.
+
+## Session publication status
+
+Source is pushed to https://github.com/Rylogix/Tracelet. Cloudflare authentication still must be supplied using the secure repository-secret flow above. Local checks and GitHub publication do not establish that the production domain is live.
