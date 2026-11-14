@@ -30,6 +30,9 @@ def initialize():
         DROP TABLE IF EXISTS alerts;
         DROP TABLE IF EXISTS footprint;
         INSERT OR IGNORE INTO migrations VALUES(4);
+        CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,owner TEXT NOT NULL,title TEXT NOT NULL,payload TEXT NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL,revision INTEGER NOT NULL DEFAULT 0,archived INTEGER NOT NULL DEFAULT 0);
+        CREATE UNIQUE INDEX IF NOT EXISTS reports_one_draft ON reports(owner) WHERE archived=0;
+        INSERT OR IGNORE INTO migrations VALUES(5);
         """)
         db.execute("DELETE FROM provider_cache WHERE expires<?", (time.time(),))
 

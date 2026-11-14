@@ -231,3 +231,31 @@ def test_explicit_username_type_overrides_domain_detection(client, monkeypatch):
     )
     assert response.status_code == 202
     assert response.json()["kind"] == "username"
+
+
+def test_report_workflow_persistence_and_revision(client):
+    draft = client.get('/api/workspace').json()
+    def entry(name, included=True):
+        return {'id': name, 'included': included, 'job': {'id': name, 'query': name, 'kind': 'phone', 'status': 'completed', 'findings': [], 'notes': [], 'errors': [], 'unavailable': []}}
+    payload = {**draft, 'title': 'Case α', 'entries': [entry('keep'), entry('remove', False)]}
+    saved = client.put('/api/workspace', json=payload, headers=HEADERS).json()
+    assert saved['revision'] == 1
+    assert client.put('/api/workspace', json=payload, headers=HEADERS).status_code == 409
+    assert len(client.get('/api/workspace').json()['entries']) == 2
+    assert client.post('/api/reports/archive', json={'id': draft['id'], 'revision': 1}, headers=HEADERS).status_code == 200
+    archived = client.get('/api/reports/' + draft['id']).json()
+    assert [e['id'] for e in archived['entries']] == ['keep']
+    assert client.get('/api/workspace').json()['entries'] == []
+    assert client.get('/api/reports').json()[0]['title'] == 'Case α'
+    assert client.delete('/api/reports/' + draft['id'], headers=HEADERS).status_code == 200
+    assert client.get('/api/reports/' + draft['id']).status_code == 404
+
+
+def test_invalid_and_running_reports(client):
+    draft = client.get('/api/workspace').json()
+    assert client.put('/api/workspace', json={**draft, 'entries': [{'job': {}}]}, headers=HEADERS).status_code == 422
+    assert client.post('/api/reports/archive', json={'id': draft['id'], 'revision': 0}, headers=HEADERS).status_code == 422
+
+    running = {'id': 'running', 'included': True, 'job': {'id': 'running', 'query': 'alice', 'kind': 'username', 'status': 'running', 'findings': [], 'notes': [], 'errors': [], 'unavailable': []}}
+    saved = client.put('/api/workspace', json={**draft, 'entries': [running]}, headers=HEADERS).json()
+    assert client.post('/api/reports/archive', json={'id': draft['id'], 'revision': saved['revision']}, headers=HEADERS).status_code == 422

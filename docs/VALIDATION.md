@@ -83,3 +83,17 @@ Prepared a private Python service and container-enabled Durable Object, plus an 
 - Cloudflare Containers API refused account access: Workers Paid required. Billing endpoints are not accessible through the current OAuth connection. No plan upgrade, paid container deployment or billing modification was performed.
 
 See cloudflare/sherlock/README.md for the exact catalog provenance, constraints, account requirement, deployment commands and limitations.
+
+## Report workflow — 2026-11-14
+
+Reorganized the website as Dashboard, Username, Email, Number, Files, Website and Report. No Auto tab. A root workflow provider preserves native results and report inclusion separately; independent entry IDs support duplicate/cached searches. Removing a report panel does not delete its source-tab result. Draft autosaves use optimistic revisions and an account-scoped server snapshot. Save to history & clear archives only included panels, then starts a clean workspace. Saved reports reopen as read-only exports from Dashboard.
+
+- Python: 20 passed, including draft persistence, stale-save rejection, malformed entries, archive selection and running/empty archive rejection.
+- Worker: 87 passed, two optional external smoke checks skipped. Report tests use real Miniflare/D1 to verify owner isolation, revision conflicts, archive filtering, fresh drafts and scoped deletion.
+- Frontend static production build and TypeScript passed. Local desktop/mobile browser suite: four passed.
+- Hosted local desktop/mobile: four passed, including real phone/file analysis, report removal/native retention, UTF-8 TXT, a genuine parsed PDF with Unicode title, clipboard contents, reload, archive/clear and cross-account isolation. PDF/TXT do not contain the saved optional API credential.
+- Production desktop and mobile workflow tests passed individually after deployment. The combined production run exercised the shared-IP authentication safety gate; tests now wait for its legitimate reset rather than bypassing it.
+- Live production website + two username searches passed through the actual UI. Both username result panels remained in their native tab after report removal; excluding one username and the website left one report panel. The octocat run returned 12 real public profile matches. GitHub was blocked on the hosted egress and was correctly labeled unavailable rather than absent.
+- Migration 0004 applied to production D1. Worker deployed as 111b96bf-e3d4-4a37-9662-a9b72986e3af.
+
+Reports retain structured metadata, not uploaded file bytes. PDF/fontkit and the report font load only on export; unsupported glyphs use explicit Unicode code points and the PDF also attaches the complete original UTF-8 text. Archived reports remain until deleted or account removal. Drafts support 100 search panels and a 1.9 MB validated payload. Request limits for other APIs remain unchanged. Docker packaging now includes the public report font; a new Docker build was not attempted because this workspace previously exhausted disk during container startup.

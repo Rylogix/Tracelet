@@ -6,16 +6,16 @@ A free, open-source OSINT workspace for public information, with real sources an
 
 ## What works
 
-- Automatic username / email / phone / domain input detection.
-- Public GitHub profile lookup, DNS-over-HTTPS, RDAP domain registration, and offline phone validation.
+- Dashboard → Username, Email, Number, Files, Website → Report workflow. Each search stays in its source tab and adds its own removable report panel.
+- Public username checks across 29 platforms, DNS-over-HTTPS, RDAP domain registration, and offline phone validation.
 - Browser-only image metadata, PDF properties, file size and SHA-256 analysis. No hosted uploads.
-- Background searches, live progress, cancellation, source links, timestamps, confidence labels and JSON exports.
-- Opt-in history, private investigation storage, API-key encryption, manual connect/disconnect/test controls.
+- Background searches, live progress, cancellation, source links, timestamps and confidence labels. Editable report titles, PDF/TXT downloads and clipboard copy.
+- Private report drafts autosave across tabs and reloads. Save to history & clear archives only the selected panels and starts a fresh workspace. API-key encryption and optional integration controls remain available.
 - API usage dashboard with atomic counters, provider headers when present, honest unknown values, retry-after cooldowns and personal budgets.
 - Cloudflare: public passkey signup/login, HttpOnly sessions and account-isolated D1 storage. No paid authentication service required.
 - Local: Python/FastAPI, SQLite, auto-generated encryption key, Windows/macOS/Linux launchers and Docker Compose.
 
-**Limits:** broad Sherlock/Maigret/ExifTool execution remains disabled pending live compatibility validation. Account verification supports GitHub only. Monitoring checks profile metadata, not arbitrary people or content. Video and office documents receive file properties/hash only. VirusTotal needs your own key and has not been tested against a live personal key in this workspace. No sensitive-person profiling, account enumeration, active security scanning, or paid adapters are implemented.
+**Limits:** optional Sherlock container deployment requires paid infrastructure and remains disabled in the free Cloudflare configuration. Maigret/ExifTool remain disabled. Video and office documents receive file properties/hash only. VirusTotal requires your own key; personal-key live validation remains pending. No sensitive-person profiling, account enumeration or active security scans.
 
 ## Run as a Cloudflare website
 

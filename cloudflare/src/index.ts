@@ -1,3 +1,4 @@
+import { reportRoutes } from "./reports";
 import { startSherlock, refreshSherlock, cancelSherlock, sherlockEnabled, type SherlockEnv } from "./sherlock";
 import { platforms, scanProfiles, type ProfileCheck } from "./usernames";
 import { auth, owner as identify, json, type AuthEnv } from "./auth";
@@ -168,6 +169,8 @@ async function routes(
   path: string,
 ): Promise<Response> {
   const method = request.method;
+  const reportResponse = await reportRoutes(request, env.DB, owner, path);
+  if (reportResponse) return reportResponse;
   if (path === "/api/health")
     return json({
       status: "ok",
@@ -528,6 +531,7 @@ async function routes(
   if (path === "/api/account" && method === "DELETE") {
     await env.DB.batch(
       [
+        "reports",
         "settings",
         "jobs",
         "credentials",
@@ -556,8 +560,9 @@ const worker = {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<Response> {
+    const bodyLimit = new URL(request.url).pathname === "/api/workspace" ? 2000000 : 16384;
     if (!["GET", "HEAD"].includes(request.method)) {
-      if (Number(request.headers.get("content-length")) > 16384)
+      if (Number(request.headers.get("content-length")) > bodyLimit)
         return json({ detail: "Request too large" }, 413);
       if (request.body) {
         const reader = request.body.getReader();
@@ -567,7 +572,7 @@ const worker = {
           const part = await reader.read();
           if (part.done) break;
           size += part.value.length;
-          if (size > 16384) {
+          if (size > bodyLimit) {
             await reader.cancel();
             return json({ detail: "Request too large" }, 413);
           }
@@ -612,7 +617,7 @@ const worker = {
         request.headers.get("x-tracelet-client") !== "local-ui"
       )
         return json({ detail: "Client header required" }, 403);
-      if (Number(request.headers.get("content-length")) > 16384)
+      if (Number(request.headers.get("content-length")) > (path === "/api/workspace" ? 2000000 : 16384))
         return json({ detail: "Request too large" }, 413);
       if (path.startsWith("/api/auth/")) return await auth(request, env, path);
       const owner = await identify(request, env);

@@ -2,14 +2,14 @@
 
 ## Objective and scope
 
-Make public intelligence gathering accessible through six categories: Username, Email, Phone, Files, Website, and My Digital Footprint. Never fabricate findings. Preserve evidence, observation times, limitations and confidence. Similar usernames are possible matches, not proof of shared identity.
+Make public intelligence gathering accessible through a report workflow: Dashboard, Username, Email, Number, Files, Website, and Report. Never fabricate findings. Preserve evidence, observation times, limitations and confidence. Similar usernames are possible matches, not proof of shared identity.
 
 The original local-first specification remains supported. The owner subsequently requested a website running entirely in their Cloudflare account under `tracelet.rylogix.com`, with public signup. Accordingly the hosted mode uses Workers + D1 and browser file processing. It cannot execute native tools or Python subprocesses. Hosted account storage is explicitly disclosed. The local mode keeps Next.js + FastAPI + SQLite and Docker Compose.
 
 ## Functional contract
 
 - Universal input router, compatible integration selection and graceful unavailable-module explanations.
-- Bounded execution, progress, cancellation, short-lived caching, optional saved history and JSON exports.
+- Bounded execution, progress, cancellation, short-lived caching, saved reports and PDF/TXT/clipboard exports.
 - Six category cards and a responsive matte charcoal UI, white text/controls/outlines, and color reserved for small status indicators. Only the signup and workspace hero headlines use promotional copy about free OSINT; the rest uses plain functional labels. Technical tool configuration belongs in Integrations.
 - Settings: availability, credentials, free-tier indication, official registration/docs links, secure masked keys, connect/replace/disconnect/test.
 - Usage: request attempts, success/failure counts, actual provider header limits/remaining/reset, source provenance, local budgets, last success/update, rate status, percentage alerts when mathematically supported. Unknown values stay unknown. No invented resets or allowances.
@@ -35,3 +35,7 @@ The original local-first specification remains supported. The owner subsequently
 - Windows/macOS launcher scripts are provided but require native-device testing. No signed desktop binaries are provided.
 
 See docs/VALIDATION.md for observed checks. A configured domain or repository URL is never evidence of deployment/publication.
+
+## Report workflow
+
+The dashboard is the entry page. Each category has its own search page; there is no Auto search tab. Results persist in the native page and are included as independent panels in the shared report. Removing a panel changes only report inclusion and can be undone from its source tab. Report titles are editable. PDF, UTF-8 TXT and clipboard exports include only selected panels and all underlying finding values, evidence URLs, confidence, timestamps, notes and checks. PDF embeds a copy of the original UTF-8 text. Save to history & clear archives the selected report and initializes an empty workspace. Saved reports can be reopened, exported and deleted from Dashboard history. Drafts and archives are private account data, or local SQLite data in local mode.

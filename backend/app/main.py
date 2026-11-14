@@ -34,6 +34,8 @@ async def lifespan(app):
 
 
 app = FastAPI(title="Tracelet local API", lifespan=lifespan)
+from .reports import router as reports_router
+app.include_router(reports_router)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["localhost", "127.0.0.1", "testserver", "backend"],

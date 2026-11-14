@@ -1,3 +1,4 @@
+export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 export async function api<T = unknown>(
   path: string,
   options: RequestInit = {},
@@ -14,10 +15,11 @@ export async function api<T = unknown>(
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(
+    throw new ApiError(
       typeof data.detail === "string"
         ? data.detail
         : "Request failed. Check your input and try again.",
+      response.status,
     );
   }
   return response.json();

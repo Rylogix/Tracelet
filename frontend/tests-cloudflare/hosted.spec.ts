@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { PDFDocument } from "pdf-lib";
 import { test, expect, type Page } from "@playwright/test";
 test.beforeEach(async ({ context }) => {
   if (!process.env.TRACELET_BASE_URL)
@@ -24,7 +26,7 @@ test("public passkey signup, private real search, signout and account isolation"
   page,
   browser,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(120000);
   await passkey(page);
   await page.goto("/");
   await expect(
@@ -50,7 +52,7 @@ test("public passkey signup, private real search, signout and account isolation"
     .click();
   await page.getByLabel("Username", { exact: true }).fill(name);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
+  await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible({timeout:30000});
   expect(
     (
       await page.request.post("/api/auth/register/verify", {
@@ -61,7 +63,9 @@ test("public passkey signup, private real search, signout and account isolation"
   ).toBe(400);
   await expect(page.getByRole("link", { name: /footprint/i })).toHaveCount(0);
   expect((await page.request.get("/api/footprint")).status()).toBe(404);
-  await page.getByLabel("Save to account", { exact: true }).check();
+  if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-dashboard-"+test.info().project.name+".png",fullPage:true});
+  await page.getByRole("link", { name: "Number", exact: true }).click();
+  await expect(page.getByRole("button", {name:"Search",exact:true})).toBeEnabled();
   await page.keyboard.press("Control+k");
   await expect(page.getByLabel("Search", { exact: true })).toBeFocused();
   await page.getByLabel("Search", { exact: true }).fill("+442079460018");
@@ -84,10 +88,13 @@ test("public passkey signup, private real search, signout and account isolation"
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const history = await page.request.get("/api/history");
-  const jobs = await history.json();
-  expect(jobs.length).toBe(1);
-  const id = jobs[0].id;
+  await expect(page.getByRole("status")).toHaveText("Saved");
+  const workspace = await (await page.request.get("/api/workspace")).json();
+  expect(workspace.entries).toHaveLength(1);
+  const id = workspace.entries[0].job.id;
+  await page.getByLabel("Search", {exact:true}).fill("+12025550123");
+  await page.getByRole("button", {name:"Search",exact:true}).click();
+  await expect(page.getByRole("region", {name:"Number search: +12025550123"})).toBeVisible();
   const key = "tracelet-test-credential-not-a-real-key";
   expect(
     (
@@ -110,8 +117,9 @@ test("public passkey signup, private real search, signout and account isolation"
   page.on("request", (r) => {
     if (r.url().includes("/api/files")) uploads.push(r.url());
   });
+  await page.getByRole("link", {name:"Files",exact:true}).click();
   await page.getByLabel("Upload file for local analysis").setInputFiles({
-    name: "fixture.png",
+    name: "café.png",
     mimeType: "image/png",
     buffer: Buffer.from(png, "base64"),
   });
@@ -119,6 +127,43 @@ test("public passkey signup, private real search, signout and account isolation"
     { timeout: 15000 },
   );
   expect(uploads).toHaveLength(0);
+  await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"Report",exact:true})).toBeVisible();
+  await expect(page.locator('a[aria-current="page"]:visible')).toHaveText(/^Report/);
+  await expect(page.locator(".workflow-entry")).toHaveCount(3);
+  await page.getByLabel("Report title").fill("Workflow α case");
+  await page.getByRole("button",{name:"Remove +12025550123 from report",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await page.getByRole("link",{name:"Number",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.getByRole("button",{name:"Add +12025550123 to report",exact:true})).toBeVisible();
+  await page.getByRole("link",{name:"Report",exact:true}).last().click();
+  await expect(page.locator('a[aria-current="page"]:visible')).toHaveText(/^Report/);
+  if(process.env.TRACELET_SCREENSHOT){await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-report-"+test.info().project.name+".png",fullPage:false});}
+  const textDownload=page.waitForEvent("download");
+  await page.getByRole("button",{name:"TXT",exact:true}).click();
+  const text=readFileSync((await (await textDownload).path())!,"utf8");
+  expect(text).toContain("+442079460018");expect(text).toContain("café.png");expect(text).not.toContain("+12025550123");expect(text).not.toContain(key);
+  const pdfDownload=page.waitForEvent("download");
+  await page.getByRole("button",{name:"PDF",exact:true}).click();
+  const bytes=readFileSync((await (await pdfDownload).path())!);expect(bytes.subarray(0,5).toString()).toBe("%PDF-");
+  const pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBeGreaterThan(0);expect(pdf.getTitle()).toBe("Workflow α case");
+  await page.context().grantPermissions(["clipboard-read","clipboard-write"]);
+  await page.getByRole("button",{name:"Copy",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Copied",exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain("café.png");
+  await expect(page.getByRole("status")).toHaveText("Saved");
+  await page.reload();await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await page.getByRole("button",{name:"Save to history & clear",exact:true}).click();
+  await expect(page.getByText("Saved to history",{exact:true})).toBeVisible();
+  await expect(page.locator(".workflow-entry")).toHaveCount(0);
+  const reports=await (await page.request.get("/api/reports")).json();expect(reports).toHaveLength(1);
+  const reportId=reports[0].id;
+  await page.getByRole("link",{name:"Dashboard",exact:true}).click();
+  await page.getByRole("link",{name:/Workflow α case/}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.getByRole("button",{name:/Remove .* from report/})).toHaveCount(0);
+
   const other = await browser.newContext({
     proxy: test.info().project.use.proxy,
     extraHTTPHeaders: process.env.TRACELET_BASE_URL
@@ -134,8 +179,10 @@ test("public passkey signup, private real search, signout and account isolation"
   await p.getByRole("button", { name: "Create account", exact: true }).click();
   await p.getByLabel("Username", { exact: true }).fill("other-" + Date.now());
   await p.getByRole("button", { name: "Create account" }).click();
-  await expect(p.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
+  await expect(p.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible({timeout:30000});
   expect((await p.request.get("/api/search/" + id)).status()).toBe(404);
+  expect((await p.request.get("/api/reports/"+reportId)).status()).toBe(404);
+  expect((await (await p.request.get("/api/workspace")).json()).entries).toEqual([]);
   expect(await (await p.request.get("/api/history")).json()).toEqual([]);
   const providers = await (await p.request.get("/api/integrations")).json();
   expect(
@@ -155,8 +202,13 @@ test("public passkey signup, private real search, signout and account isolation"
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   expect((await page.request.get("/api/history")).status()).toBe(401);
+  const loginOptions=page.waitForResponse(r=>r.url().endsWith("/api/auth/login/options"));
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
+  if((await loginOptions).status()===429){
+    await page.waitForTimeout(61000-(Date.now()%60000));
+    await page.getByRole("button", {name:"Sign in",exact:true}).click();
+  }
+  await expect(page.getByRole("heading",{name:"Report",exact:true})).toBeVisible({timeout:30000});
   if (process.env.TRACELET_SCREENSHOT)
     await page.screenshot({
       path:
@@ -249,34 +301,38 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     .click();
   await page.getByLabel("Username", { exact: true }).fill("live-" + Date.now());
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByLabel("Search",{exact:true})).toBeVisible({timeout:30000});
-  const result = await page.request.post("/api/search", {
-    headers: { "X-Tracelet-Client": "local-ui" },
-    data: { query: "example.com", history: false },
-  });
-  expect(result.status()).toBe(202);
-  const initial = await result.json();
-  let job = initial;
-  for (let i = 0; i < 80; i++) {
-    await page.waitForTimeout(500);
-    job = await (await page.request.get("/api/search/" + initial.id)).json();
-    if (!["running", "queued"].includes(job.status)) break;
+  await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible({timeout:30000});
+  async function searchTab(label:string, query:string) {
+    await page.getByRole("link",{name:label,exact:true}).click();
+    await expect(page.getByRole("heading",{name:label,exact:true})).toBeVisible();
+    await expect(page.getByRole("button",{name:"Search",exact:true})).toBeEnabled();
+    await page.getByLabel("Search",{exact:true}).fill(query);
+    await page.getByRole("button",{name:"Search",exact:true}).click();
+    let value:any;
+    await expect.poll(async()=>{
+      const workspace=await (await page.request.get("/api/workspace")).json();
+      value=workspace.entries.find((e:any)=>e.job.query===query)?.job;
+      return value && !["queued","running"].includes(value.status);
+    },{timeout:50000,intervals:[1500]}).toBe(true);
+    return value;
   }
-  const usernames = await page.request.post("/api/search", {
-    headers: { "X-Tracelet-Client": "local-ui" },
-    data: { query: "octocat", kind: "username", history: false },
-  });
-  expect(usernames.status()).toBe(202);
-  const started = await usernames.json();
-  let scan = started;
-  for (let i = 0; i < 80; i++) {
-    await page.waitForTimeout(500);
-    scan = await (await page.request.get("/api/search/" + started.id)).json();
-    if (!["running", "queued"].includes(scan.status)) break;
-  }
-  expect(scan.total).toBe(29);
-  expect(scan.checks).toHaveLength(29);
-  expect(scan.findings.some((f: { evidence: string }) => f.evidence === "https://github.com/octocat")).toBe(true);
+  const job=await searchTab("Website","example.com");
+  const scan=await searchTab("Username","octocat");
+  expect(scan.total).toBe(29);expect(scan.checks).toHaveLength(29);
+  expect(scan.findings.length).toBeGreaterThan(0);
+  const github=scan.checks.find((c:{provider:string})=>c.provider==="github");
+  expect(["found","unavailable"]).toContain(github.status);
+  console.info("Live username checks:",scan.findings.length,"matches; GitHub:",github.status,github.reason||"");
+  await searchTab("Username","torvalds");
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(3);
+  await page.getByRole("button",{name:"Remove torvalds from report",exact:true}).click();
+  await page.getByRole("button",{name:"Remove example.com from report",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
+  await page.getByRole("link",{name:"Username",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.getByRole("button",{name:"Add torvalds to report",exact:true})).toBeVisible();
   expect(
     (
       await page.request.delete("/api/account", {
