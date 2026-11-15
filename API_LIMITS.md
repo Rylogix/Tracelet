@@ -1,6 +1,6 @@
 # API limits and usage provenance
 
-Usage appears in compact badges on the relevant Username, Email and Website lookup pages. Click a badge for quota details and a personal request cap. Unknown username sources are grouped to keep the page compact. Number and Files use offline/browser tools and show no external API meter. There is no separate API Usage page.
+Usage is hidden by default under a plain-text Usage dropdown below the search field on Username, Email and Website lookup pages. Expanding it reveals compact provider badges. Click a badge for quota details and a personal request cap. Unknown username sources are grouped to keep the page compact. Number and Files use offline/browser tools and show no external API meter. There is no separate API Usage page.
 
 Tracelet never invents an external allowance. Missing provider values are `null` and rendered **Unknown**. Offline/browser modules do not consume external API quota. A configured local safety rate is not a provider-confirmed allowance.
 

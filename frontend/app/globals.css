@@ -3566,7 +3566,8 @@ select:focus {
 /* Per-lookup usage badges */
 .lookup-usage{margin:17px 0 23px;min-width:0}
 .lookup-usage-badges{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
-.usage-caption{font-size:10px;color:#777;margin-right:3px}
+.usage-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:none;color:#999;font:inherit;font-size:11px;cursor:pointer}.usage-toggle:hover{color:#eee}.usage-toggle:focus-visible{outline:1px solid #aaa;outline-offset:4px;border-radius:2px}.usage-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+#lookup-usage-content{margin-top:10px}
 .lookup-usage-badge{display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;max-width:100%;min-height:32px;padding:7px 10px;border:1px solid #ffffff1c;border-radius:7px;background:#1b1b1b;color:#c5c5c5;font-family:inherit;font-size:10px;cursor:pointer}
 .lookup-usage-badge:hover,.lookup-usage-badge[aria-expanded="true"]{border-color:#ffffff45;color:#eee}
 .lookup-usage-badge>i{width:4px;height:4px;border-radius:50%;background:#8f8f8f;flex-shrink:0}.lookup-usage-badge.usage-warn>i{background:#c7a563}
@@ -3579,5 +3580,5 @@ select:focus {
 .usage-detail-meter{height:4px;border-radius:3px;background:#ffffff0d;overflow:hidden}.usage-detail-meter>span{height:100%;background:#ccc;display:block}
 .usage-budget-form{display:flex;gap:8px;align-items:center;margin-top:15px}.usage-budget-form input{width:190px;min-width:0;max-width:100%;font-size:11px}.usage-budget-form .tl-button{white-space:nowrap;font-size:11px}
 .usage-source-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px;margin-top:13px}.usage-source-list button{display:flex;align-items:center;gap:8px;min-width:0;text-align:left;padding:11px 0;border:0;border-bottom:1px solid #ffffff0c;background:none;color:#bbb;cursor:pointer;font:inherit;font-size:11px}.usage-source-list button>span:nth-child(2){margin-left:auto;color:#777;font-size:10px}.usage-source-list button:hover{color:white}
-@media(max-width:700px){.lookup-usage{margin-top:14px}.lookup-usage-badge{min-height:36px;padding:8px 9px}.usage-inline-panel{padding:15px}.usage-inline-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.usage-source-list{grid-template-columns:minmax(0,1fr)}.usage-budget-form input{width:100%;flex:1}.usage-caption{width:100%;margin-bottom:1px}}
+@media(max-width:700px){.lookup-usage{margin-top:14px}.lookup-usage-badge{min-height:36px;padding:8px 9px}.usage-inline-panel{padding:15px}.usage-inline-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.usage-source-list{grid-template-columns:minmax(0,1fr)}.usage-budget-form input{width:100%;flex:1}}
 @media(prefers-reduced-motion:reduce){.usage-mini-meter>span{transition:none}}

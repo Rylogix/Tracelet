@@ -6,13 +6,14 @@ import {Button} from "./ui/button";
 import {usageState,type ProviderUsage} from "./usage-model";
 
 export function LookupUsage({kind,running}:{kind:string;running:boolean}) {
+  const [expanded,setExpanded]=useState(false);
   const [rows,setRows]=useState<ProviderUsage[]>([]);const [selected,setSelected]=useState<string|null>(null);
   const [error,setError]=useState("");const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);
   const reload=useRef<()=>Promise<void>>(async()=>{});
   const relevant=["username","email","website"].includes(kind);
-  useEffect(()=>{setSelected(null);setMessage("")},[kind]);
+  useEffect(()=>{setExpanded(false);setSelected(null);setMessage("")},[kind]);
   useEffect(()=>{
-    if(!relevant)return;
+    if(!relevant||!expanded)return;
     let disposed=false,version=0;
     const load=async()=>{
       const currentVersion=++version;
@@ -22,7 +23,7 @@ export function LookupUsage({kind,running}:{kind:string;running:boolean}) {
     reload.current=load;void load();
     const interval=setInterval(()=>{if(document.visibilityState==="visible")void load()},running?5000:30000);
     return()=>{disposed=true;clearInterval(interval)};
-  },[kind,running,relevant]);
+  },[kind,running,relevant,expanded]);
   if(!relevant)return null;
   const providers=rows.filter(r=>r.kinds?.includes(kind)&&(r.available||r.attempts>0));
   const known=providers.filter(r=>r.remaining!==null||r.quota_limit!==null||r.budget!==null||r.blocked_until>Date.now()/1000||r.alerts.length);
@@ -39,7 +40,9 @@ export function LookupUsage({kind,running}:{kind:string;running:boolean}) {
     </button>;
   }
   return <section className="lookup-usage" aria-label="Lookup usage">
-    <div className="lookup-usage-badges"><span className="usage-caption">Usage</span>{shown.map(badge)}
+    <button type="button" className="usage-toggle" aria-expanded={expanded} aria-controls="lookup-usage-content" onClick={()=>setExpanded(!expanded)}>Usage<ChevronDown size={12}/></button>
+    <div id="lookup-usage-content" hidden={!expanded}>
+    <div className="lookup-usage-badges">{shown.map(badge)}
       {others.length>0&&<button type="button" className="lookup-usage-badge" aria-expanded={selected==="others"} aria-controls="lookup-usage-details" onClick={()=>setSelected(selected==="others"?null:"others")}><i/><span>{others.length} {shown.length?"other ":""}sources</span><span className="usage-value">Local tracking</span><ChevronDown size={11}/></button>}
       {error&&<button type="button" className="lookup-usage-badge" onClick={()=>reload.current()}>{error}</button>}
     </div>
@@ -59,6 +62,7 @@ export function LookupUsage({kind,running}:{kind:string;running:boolean}) {
         }}><input name="budget" type="number" min="0" max="1000000" placeholder="Personal request cap" aria-label={current.name+" local request budget"} defaultValue={current.budget??""}/><Button size="sm" variant="outline" disabled={busy}>Save budget</Button></form>
         {message&&<p className="usage-provenance" aria-live="polite">{message}</p>}
       </div>}
+    </div>
     </div>
   </section>;
 }

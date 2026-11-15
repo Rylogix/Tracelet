@@ -68,6 +68,11 @@ test("public passkey signup, private real search, signout and account isolation"
   expect((await page.request.get("/usage")).status()).toBe(404);
   await page.getByRole("link",{name:"Website",exact:true}).first().click();
   await expect(page.getByRole("heading",{name:"Website",exact:true})).toBeVisible();
+  const usageToggle=page.getByRole("button",{name:"Usage",exact:true});
+  await expect(usageToggle).toHaveAttribute("aria-expanded","false");
+  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toBeHidden();
+  await usageToggle.click();
+  await expect(usageToggle).toHaveAttribute("aria-expanded","true");
   await page.getByRole("button",{name:"DNS lookup usage",exact:true}).click();
   await expect(page.locator(".usage-inline-metrics").getByText("Unknown",{exact:true}).first()).toBeVisible();
   await expect(page.locator(".usage-inline-panel").getByRole("meter")).toHaveCount(0);
@@ -77,7 +82,12 @@ test("public passkey signup, private real search, signout and account isolation"
   await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toContainText("10 budget left");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-usage-"+test.info().project.name+".png",fullPage:true});
+  await usageToggle.click();
+  await expect(page.locator(".usage-inline-panel")).toBeHidden();
+  if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-usage-collapsed-"+test.info().project.name+".png",fullPage:true});
   await page.getByRole("link",{name:"Username",exact:true}).click();
+  await expect(usageToggle).toHaveAttribute("aria-expanded","false");
+  await usageToggle.click();
   await expect(page.getByRole("region",{name:"Lookup usage"})).toContainText("sources");
   await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toHaveCount(0);
   await page.getByRole("button",{name:/sources.*Local tracking/}).click();

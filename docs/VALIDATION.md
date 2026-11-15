@@ -141,3 +141,10 @@ Removed the API Usage navigation and page. Username, Email and Website now show 
 Validation: Worker 100 tests passed, two optional live-provider checks skipped; Python 22 passed; hosted browser suite eight passed on desktop/mobile, two optional external checks skipped; local desktop/mobile browser suite four passed. New tests cover unknown/confirmed/stale quotas, local budget provenance, exhaustion and rate limits. Browser checks verify the removed page returns 404, username source filtering, unknown quotas without invented meters, saving caps, offline absence, real phone results, account isolation and report exports. Frontend static build and Worker TypeScript/dry-run passed.
 
 Deployed Worker a4fb8c39-2567-47f9-975e-821f65df6b86. Production mobile passkey/report workflow and guest routing both passed. Actual mobile usage badge/detail layout was inspected; temporary test accounts were deleted by the test flow.
+
+
+## Collapsed lookup usage — 2026-11-15
+
+Usage badges and details are hidden by default behind a small plain-text Usage control with a chevron beneath each API-enabled category search. The control exposes its expansion state to assistive technology, closes on category changes, and pauses local-counter polling while closed. Existing quota provenance and budget controls are preserved.
+
+Frontend production export passed. Desktop/mobile hosted workflow checks passed (two), covering initial collapse, expansion, quota details, budget saving, re-collapse and category changes. Production mobile workflow passed against Worker 42eb44a4-5387-4430-87b8-447199d2c106; collapsed and expanded mobile screenshots were captured. No backend or provider execution changes.

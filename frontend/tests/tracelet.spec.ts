@@ -26,6 +26,7 @@ test("first run and real phone search", async ({ page }) => {
 });
 test("unknown quotas and credential controls", async ({ page }) => {
   await page.goto("/website");
+  await page.getByRole("button",{name:"Usage",exact:true}).click();
   await page.getByRole("button",{name:"DNS lookup usage",exact:true}).click();
   await expect(
     page.getByText("Unknown", { exact: true }).first(),
