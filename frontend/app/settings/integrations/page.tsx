@@ -1,31 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plug, KeyRound, ExternalLink } from "lucide-react";
+import { KeyRound, ExternalLink } from "lucide-react";
 import { api, type Integration } from "@/components/api";
 import { Button } from "@/components/ui/button";
 import { useRuntime } from "@/components/auth-gate";
-import {UsageAlerts} from "@/components/usage-alerts";
+import {SettingsUsage} from "@/components/settings-usage";
 export default function Integrations() {
   const { hosted } = useRuntime();
-  const [filter, setFilter] = useState("All tools");
-  const [items, setItems] = useState<Integration[]>([]);
+  const [items, setItems] = useState<Integration[] | null>(null);
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
-  const [health, setHealth] = useState<
-    {
-      provider: string;
-      last_success: string | null;
-      attempts: number;
-      safety_limit_per_minute: number;
-    }[]
-  >([]);
   const [busy, setBusy] = useState("");
   const load = () => api<Integration[]>("/integrations").then(setItems);
   useEffect(() => {
     load().catch((e) => setMessage(e.message));
-    api<typeof health>("/usage")
-      .then(setHealth)
-      .catch(() => {});
   }, []);
   async function action(id: string, operation: string) {
     setBusy(id);
@@ -57,24 +45,7 @@ export default function Integrations() {
       setBusy("");
     }
   }
-  const needsSetup = (i: Integration) =>
-    ["API key required", "Connection test required"].includes(i.status);
-  const filteredItems = items.filter(
-    (i) =>
-      filter === "All tools" ||
-      (filter === "Ready to use"
-        ? i.available
-        : filter === "Needs setup"
-          ? needsSetup(i)
-          : !i.available && !needsSetup(i)),
-  );
-  const filters = ["All tools", "Ready to use", "Needs setup", "Unavailable"];
-  const counts = [
-    items.length,
-    items.filter((i) => i.available).length,
-    items.filter(needsSetup).length,
-    items.filter((i) => !i.available && !needsSetup(i)).length,
-  ];
+  const configurable = items?.filter((i) => i.credential && i.installed);
   return (
     <>
       <h1>Integrations</h1>
@@ -83,27 +54,10 @@ export default function Integrations() {
           {message}
         </p>
       )}
-      <div className="tool-filters" aria-label="Filter integrations">
-        {filters.map((name, index) => (
-          <button
-            key={name}
-            type="button"
-            aria-pressed={filter === name}
-            onClick={() => setFilter(name)}
-          >
-            {name}
-            <span>{counts[index]}</span>
-          </button>
-        ))}
-      </div>
-      {!filteredItems.length && (
-        <div className="empty">
-          <strong>No tools in this view.</strong>
-          <p></p>
-        </div>
-      )}
+      {!items && !message && <p role="status">Loading integrations…</p>}
+      {configurable?.length === 0 && <p>No integrations to configure.</p>}
       <div className="integration-grid">
-        {filteredItems.map((i) => (
+        {configurable?.map((i) => (
           <section className="panel" key={i.id}>
             <div className="row">
               <h2>{i.name}</h2>
@@ -113,71 +67,51 @@ export default function Integrations() {
             </div>
             <div className="actions">
               <span className="badge">
-                {i.credential ? "Personal key required" : "No API key"}
+                Personal key required
               </span>
               {i.free_tier && <span className="badge">Free tier offered</span>}
             </div>
-            {i.credential && (
-              <>
-                <label className="check" htmlFor={"key-" + i.id}>
-                  <KeyRound size={13} />
-                  {i.connected ? "Saved key: ••••••••" : "Personal API key"}
-                </label>
-                <input
-                  id={"key-" + i.id}
-                  type="password"
-                  autoComplete="off"
-                  value={keys[i.id] || ""}
-                  onChange={(e) => setKeys({ ...keys, [i.id]: e.target.value })}
-                  placeholder="API key"
-                />
-                <div className="actions">
-                  <Button
-                    size="sm"
-                    disabled={!keys[i.id] || busy === i.id}
-                    onClick={() => action(i.id, "save")}
-                  >
-                    {i.connected ? "Replace key" : "Connect"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!i.connected || busy === i.id}
-                    onClick={() => action(i.id, "delete")}
-                  >
-                    Disconnect
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={
-                      !i.connected || busy === i.id || i.id !== "virustotal"
-                    }
-                    onClick={() => action(i.id, "test")}
-                  >
-                    Test connection
-                  </Button>
-                </div>
-              </>
-            )}
+            <label className="check" htmlFor={"key-" + i.id}>
+              <KeyRound size={13} />
+              {i.connected ? "Saved key: ••••••••" : "Personal API key"}
+            </label>
+            <input
+              id={"key-" + i.id}
+              type="password"
+              autoComplete="off"
+              value={keys[i.id] || ""}
+              onChange={(e) => setKeys({ ...keys, [i.id]: e.target.value })}
+              placeholder="API key"
+            />
+            <div className="actions">
+              <Button
+                size="sm"
+                disabled={!keys[i.id] || busy === i.id}
+                onClick={() => action(i.id, "save")}
+              >
+                {i.connected ? "Replace key" : "Connect"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!i.connected || busy === i.id}
+                onClick={() => action(i.id, "delete")}
+              >
+                Disconnect
+              </Button>
+              {i.id === "virustotal" && <Button
+                size="sm"
+                variant="outline"
+                disabled={!i.connected || busy === i.id}
+                onClick={() => action(i.id, "test")}
+              >
+                Test connection
+              </Button>}
+            </div>
             <details className="compact-details">
               <summary>Details</summary>
               <p>{i.description}</p>
-              <p>
-                {i.quota_reporting}
-                <br />
-                {i.rate !== null
-                  ? "Safety rate: " +
-                    i.rate +
-                    "/minute · Last success: " +
-                    (health.find((h) => h.provider === i.id)?.last_success
-                      ? new Date(
-                          health.find((h) => h.provider === i.id)!
-                            .last_success!,
-                        ).toLocaleString()
-                      : "Not recorded")
-                  : i.id==='username-discovery'?'Limits tracked per site':["email-security","network"].includes(i.id)?'Shared DNS provider limits':"No external API quota"}
-              </p>
+              <p>{i.quota_reporting}</p>
               <div className="actions">
                 <a href={i.docs} target="_blank" rel="noreferrer">
                   Documentation <ExternalLink size={10} className="inline" />
@@ -192,7 +126,7 @@ export default function Integrations() {
           </section>
         ))}
       </div>
-      <UsageAlerts/>
+      <SettingsUsage/>
       {hosted && <details className="panel mt-8">
         <summary>Account</summary>
         <Button variant="outline" onClick={async () => {

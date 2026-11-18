@@ -41,6 +41,7 @@ export type Integration = {
   available: boolean;
   connected: boolean;
   credential: boolean;
+  installed: boolean;
   status: string;
   free_tier?: boolean;
   registration?: string;

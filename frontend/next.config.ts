@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 const hosted = process.env.TRACELET_HOSTED === "1";
 const config: NextConfig = {
   output: hosted ? "export" : "standalone",
+  agentRules: false,
   experimental: { cpus: 2 },
   ...(hosted
     ? {}

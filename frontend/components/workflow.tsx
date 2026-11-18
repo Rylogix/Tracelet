@@ -5,7 +5,7 @@ export type Entry = {id:string; included:boolean; job:Job};
 export type Report = {id:string;title:string;entries:Entry[];created:string;updated:string;revision:number;archived?:boolean};
 export type SavedReport = {id:string;title:string;created:string;updated:string;count:number};
 type Workflow = {
-  draft:Report|null; history:SavedReport[]; error:string; saving:boolean;
+  draft:Report|null; history:SavedReport[]; historyLoaded:boolean; error:string; saving:boolean;
   add:(job:Job)=>void; include:(id:string,included:boolean)=>void;
   title:(title:string)=>void; cancel:(id:string)=>Promise<void>;
   finish:()=>Promise<void>; retry:()=>void; deleteReport:(id:string)=>Promise<void>;
@@ -15,10 +15,11 @@ export const useWorkflow=()=>useContext(Context);
 export function WorkflowProvider({children}:{children:ReactNode}) {
   const [draft,setDraft]=useState<Report|null>(null);
   const [history,setHistory]=useState<SavedReport[]>([]);
+  const [historyLoaded,setHistoryLoaded]=useState(false);
   const [error,setError]=useState("");const [saving,setSaving]=useState(false);
   const current=useRef<Report|null>(null);const revision=useRef(0);
   const queue=useRef<Promise<unknown>>(Promise.resolve());const mounted=useRef(true);
-  const loadHistory=()=>api<SavedReport[]>("/reports").then(v=>{if(mounted.current)setHistory(v)});
+  const loadHistory=()=>api<SavedReport[]>("/reports").then(v=>{if(mounted.current){setHistory(v);setHistoryLoaded(true)}});
   async function load() {
     try {const value=await api<Report>("/workspace");if(!mounted.current)return;
       current.current=value;revision.current=value.revision;setDraft(value);setError("");await loadHistory();
@@ -75,7 +76,7 @@ export function WorkflowProvider({children}:{children:ReactNode}) {
     await api("/reports/archive",{method:"POST",body:JSON.stringify({id:current.current.id,revision:revision.current})});
     await load();
   }
-  return <Context.Provider value={{draft,history,error,saving,add,
+  return <Context.Provider value={{draft,history,historyLoaded,error,saving,add,
     include:(id,included)=>patch(value=>({...value,entries:value.entries.map(e=>e.id===id?{...e,included}:e)})),
     title:title=>patch(value=>({...value,title})),cancel,finish,
     retry:()=>current.current?commit(current.current):void load(),

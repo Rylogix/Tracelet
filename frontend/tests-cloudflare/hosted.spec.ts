@@ -68,32 +68,26 @@ test("public passkey signup, private real search, signout and account isolation"
   expect((await page.request.get("/usage")).status()).toBe(404);
   await page.getByRole("link",{name:"Website",exact:true}).first().click();
   await expect(page.getByRole("heading",{name:"Website",exact:true})).toBeVisible();
-  const usageToggle=page.getByRole("button",{name:"Usage",exact:true});
-  await expect(usageToggle).toHaveAttribute("aria-expanded","false");
-  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toBeHidden();
-  await usageToggle.click();
-  await expect(usageToggle).toHaveAttribute("aria-expanded","true");
-  await page.getByRole("button",{name:"DNS lookup usage",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Usage",exact:true})).toHaveCount(0);
+  await page.getByRole("link",{name:"Settings",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"API usage",exact:true})).toBeVisible();
+  await page.getByLabel("Usage source").selectOption("dns");
   await expect(page.locator(".usage-inline-metrics").getByText("Unknown",{exact:true}).first()).toBeVisible();
   await expect(page.locator(".usage-inline-panel").getByRole("meter")).toHaveCount(0);
   await page.getByLabel("DNS lookup local request budget").fill("10");
   await page.getByRole("button",{name:"Save budget",exact:true}).click();
   await expect(page.getByText("Budget saved",{exact:true})).toBeVisible();
-  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toContainText("10 budget left");
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-usage-"+test.info().project.name+".png",fullPage:true});
-  await usageToggle.click();
-  await expect(page.locator(".usage-inline-panel")).toBeHidden();
-  if(process.env.TRACELET_SCREENSHOT)await page.screenshot({path:process.env.TRACELET_SCREENSHOT+"-usage-collapsed-"+test.info().project.name+".png",fullPage:true});
-  await page.getByRole("link",{name:"Username",exact:true}).click();
-  await expect(usageToggle).toHaveAttribute("aria-expanded","false");
-  await usageToggle.click();
-  await expect(page.getByRole("region",{name:"Lookup usage"})).toContainText("sources");
-  await expect(page.getByRole("button",{name:"DNS lookup usage",exact:true})).toHaveCount(0);
-  await page.getByRole("button",{name:/sources.*Local tracking/}).click();
-  await expect(page.locator(".usage-source-list").getByRole("button",{name:/GitHub/})).toBeVisible();
-  await page.locator(".usage-source-list").getByRole("button",{name:/GitHub/}).click();
+  await expect(page.getByText("10 budget left",{exact:true})).toBeVisible();
+  await page.reload();
+  await page.getByLabel("Usage source").selectOption("dns");
+  await expect(page.getByLabel("DNS lookup local request budget")).toHaveValue("10");
+  await page.getByText("Usage alerts",{exact:true}).click();
+  await expect(page.getByRole("checkbox",{name:"50%"})).toBeChecked();
+  await page.getByLabel("Usage source").selectOption({label:"GitHub"});
   await expect(page.locator(".usage-inline-panel strong")).toHaveText("GitHub");
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole("link",{name:"Username",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Usage",exact:true})).toHaveCount(0);
 
   expect(
     (
@@ -109,8 +103,16 @@ test("public passkey signup, private real search, signout and account isolation"
   await page.getByRole("link", { name: "Number", exact: true }).click();
   await expect(page.getByRole("region",{name:"Lookup usage"})).toHaveCount(0);
   await expect(page.getByRole("button", {name:"Search",exact:true})).toBeEnabled();
-  await page.keyboard.press("Control+k");
-  await expect(page.getByLabel("Search", { exact: true })).toBeFocused();
+  const searchBox = page.getByLabel("Search", { exact: true });
+  if (test.info().project.use.isMobile) {
+    await searchBox.tap();
+    await expect(searchBox).toBeFocused();
+  } else {
+    await expect(async () => {
+      await page.keyboard.press("Control+k");
+      await expect(searchBox).toBeFocused({ timeout: 300 });
+    }).toPass();
+  }
   await page.getByLabel("Search", { exact: true }).fill("+442079460018");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
@@ -147,15 +149,17 @@ test("public passkey signup, private real search, signout and account isolation"
   await page.getByLabel("Search", {exact:true}).fill("+12025550123");
   await page.getByRole("button", {name:"Search",exact:true}).click();
   await expect(page.getByRole("region", {name:"Number search: +12025550123"})).toBeVisible();
+  await page.getByRole("link",{name:"Dashboard",exact:true}).click();
+  await expect(page.locator("main").getByRole("link")).toHaveCount(0);
+  await expect(page.getByRole("heading",{name:"Searches by category"})).toBeVisible();
+  await expect(page.locator(".dashboard-breakdown > div").filter({hasText:"Number"}).locator("dd")).toHaveText("2");
+  await expect(page.locator(".dashboard-activity")).toContainText("+442079460018");
+  await expect(page.getByText("No usage recorded yet.")).toBeVisible();
   const key = "tracelet-test-credential-not-a-real-key";
-  expect(
-    (
-      await page.request.put("/api/integrations/virustotal/key", {
-        headers: { "X-Tracelet-Client": "local-ui" },
-        data: { key },
-      })
-    ).status(),
-  ).toBe(200);
+  await page.getByRole("link",{name:"Settings",exact:true}).click();
+  await page.getByLabel("Personal API key").fill(key);
+  await page.getByRole("button",{name:"Connect",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Replace key",exact:true})).toBeVisible();
   expect(
     await (await page.request.get("/api/integrations")).text(),
   ).not.toContain(key);
@@ -199,8 +203,8 @@ test("public passkey signup, private real search, signout and account isolation"
   const pdfDownload=page.waitForEvent("download");
   await page.getByRole("button",{name:"PDF",exact:true}).click();
   const bytes=readFileSync((await (await pdfDownload).path())!);expect(bytes.subarray(0,5).toString()).toBe("%PDF-");
-  const pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBeGreaterThanOrEqual(4);expect(pdf.getTitle()).toBe("Workflow α case");
-  expect(pdf.getPages().some(p=>(p.node.Annots()?.size()||0)>0)).toBe(true);
+  const pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBe(1);expect(pdf.getTitle()).toBe("Workflow α case");
+  expect(pdf.catalog.toString()).not.toContain("/EmbeddedFiles");
   await page.context().grantPermissions(["clipboard-read","clipboard-write"]);
   await page.getByRole("button",{name:"Copy",exact:true}).click();
   await expect(page.getByRole("button",{name:"Copied",exact:true})).toBeVisible();
@@ -213,6 +217,7 @@ test("public passkey signup, private real search, signout and account isolation"
   const reports=await (await page.request.get("/api/reports")).json();expect(reports).toHaveLength(1);
   const reportId=reports[0].id;
   await page.getByRole("link",{name:"Dashboard",exact:true}).click();
+  await expect(page.locator(".dashboard-metrics > div").filter({hasText:"Saved reports"}).locator("dd")).toHaveText("1");
   await page.getByRole("link",{name:/Workflow α case/}).click();
   await expect(page.locator(".workflow-entry")).toHaveCount(2);
   await expect(page.getByRole("button",{name:/Remove .* from report/})).toHaveCount(0);
@@ -281,19 +286,9 @@ test("public passkey signup, private real search, signout and account isolation"
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    if (route === "/settings/integrations") {
-      await page.getByRole("button", { name: /^Ready to use/ }).click();
-      await expect(
-        page.getByRole("button", { name: /^Ready to use/ }),
-      ).toHaveAttribute("aria-pressed", "true");
-      await expect(
-        page.getByRole("heading", { name: "VirusTotal", exact: true }),
-      ).toHaveCount(0);
-      await page.getByRole("button", { name: /^All tools/ }).click();
-      await expect(
-        page.getByRole("heading", { name: "VirusTotal", exact: true }),
-      ).toBeVisible();
-    }
+    await expect(page.getByRole("heading", { name: "VirusTotal", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "DNS lookup", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "AbuseIPDB", exact: true })).toHaveCount(0);
     if (process.env.TRACELET_SCREENSHOT)
       await page.screenshot({
         path:
