@@ -39,10 +39,10 @@ export default function Dashboard() {
   return <div className="workflow-page dashboard-page">
     <div className="page-heading"><h1>Dashboard</h1></div>
     <dl className="dashboard-metrics">
-      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--reports" aria-hidden="true"><Archive size={18} strokeWidth={1.75} /></span>Saved reports</dt><dd>{historyLoaded ? savedCount : "—"}</dd></div>
-      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--searches" aria-hidden="true"><Search size={18} strokeWidth={1.75} /></span>Searches in draft</dt><dd>{draft ? entries.length : "—"}</dd></div>
-      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--findings" aria-hidden="true"><Fingerprint size={18} strokeWidth={1.75} /></span>Findings in draft report</dt><dd>{draft ? included.reduce((total, entry) => total + entry.job.findings.length, 0) : "—"}</dd></div>
-      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--requests" aria-hidden="true"><Activity size={18} strokeWidth={1.75} /></span>Locally tracked API requests</dt><dd>{requests ?? "—"}</dd></div>
+      <div className="panel"><dt><Archive className="dashboard-metric-icon" size={18} aria-hidden="true" />Saved reports</dt><dd>{historyLoaded ? savedCount : "—"}</dd></div>
+      <div className="panel"><dt><Search className="dashboard-metric-icon" size={18} aria-hidden="true" />Searches in draft</dt><dd>{draft ? entries.length : "—"}</dd></div>
+      <div className="panel"><dt><Fingerprint className="dashboard-metric-icon" size={18} aria-hidden="true" />Findings in draft report</dt><dd>{draft ? included.reduce((total, entry) => total + entry.job.findings.length, 0) : "—"}</dd></div>
+      <div className="panel"><dt><Activity className="dashboard-metric-icon" size={18} aria-hidden="true" />Locally tracked API requests</dt><dd>{requests ?? "—"}</dd></div>
     </dl>
 
     <div className="dashboard-grid">
