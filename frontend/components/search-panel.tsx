@@ -4,6 +4,7 @@ import {Search,ArrowRight,Upload,Square,X,Plus,FileSearch} from "lucide-react";
 import Link from "next/link";
 import {api,type Job} from "./api";
 import {analyzeFile} from "./analyze-file";
+import {EmailHeaderAnalyzer} from "./email-header-analyzer";
 import {Findings} from "./findings";
 import {Button} from "./ui/button";
 import {useWorkflow,type Entry} from "./workflow";
@@ -58,6 +59,7 @@ export function SearchPanel({kind}:{kind:string}) {
       <input className="hidden" ref={file} type="file" aria-label="Upload file for local analysis" onChange={e=>{if(e.target.files?.[0])void upload(e.target.files[0]);e.target.value=""}}/>
     </>:<form className="workflow-search" onSubmit={search}><Search size={20}/><input aria-label="Search" ref={input} value={query} onChange={e=>setQuery(e.target.value)} placeholder={type.placeholder} type={kind==="email"?"email":kind==="phone"?"tel":"text"} maxLength={253} required/><Button disabled={busy||running||!draft}>{busy?"Starting…":"Search"}<ArrowRight size={15}/></Button></form>}
     {error && <div role="alert" className="error">{error}</div>}
+    {kind==="email" && <EmailHeaderAnalyzer/>}
     <div className="section-heading"><h2>Results <span className="muted">{entries.length||""}</span></h2></div>
     <div className="entry-stack">{[...entries].reverse().map(e=><EntryPanel key={e.id} entry={e}/>)}</div>
     {!entries.length && <div className="workflow-empty"><FileSearch size={27}/><span>{draft?"No searches yet":"Loading…"}</span></div>}

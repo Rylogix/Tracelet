@@ -455,3 +455,49 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
     job.findings.some((f: { source: string }) => f.source === "RDAP"),
   ).toBe(true);
 });
+
+test("analyzes folded email headers locally and ignores the body", async ({ page }) => {
+  await passkey(page);
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await page.getByLabel("Username", { exact: true }).fill("headers-test-" + Date.now());
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Dashboard", exact: true })).toBeVisible();
+  try {
+    await page.getByRole("link", { name: "Email", exact: true }).click();
+    await page.getByText("Email header analyzer", { exact: true }).click();
+    const sentHeaderData: string[] = [];
+    page.on("request", request => {
+      if ((request.url() + (request.postData() ?? "")).includes("private-header-fixture"))
+        sentHeaderData.push(request.method());
+    });
+    const input = page.getByLabel("Original email headers");
+    await input.fill([
+      "From: Test <private-header-fixture@example.com>",
+      "Reply-To: reply@example.net",
+      "Return-Path: <bounce@example.com>",
+      "Received: from relay.example.com",
+      "  by inbox.example.net",
+      "Received: from workstation.example.com by relay.example.com",
+      "Authentication-Results: inbox.example.net;",
+      "  spf=pass (ignored; dmarc=pass); dkim=fail; dmarc=fail",
+      "",
+      "Received: fake-body-hop.example.com",
+    ].join("\n"));
+    await page.getByRole("button", { name: "Analyze headers" }).click();
+    const result = page.locator(".email-header-results");
+    await expect(result.getByText("Replies go to a different address than the one in From.")).toBeVisible();
+    await expect(result.getByText(/SPF pass.*DKIM fail.*DMARC fail/)).toBeVisible();
+    await expect(result.getByText("from relay.example.com by inbox.example.net", { exact: true })).toBeVisible();
+    await expect(result.getByText(/fake-body-hop|DMARC pass/)).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(sentHeaderData).toEqual([]);
+    await page.getByRole("button", { name: "Clear", exact: true }).click();
+    await expect(input).toHaveValue("");
+    await expect(result).toHaveCount(0);
+  } finally {
+    expect((await page.request.delete("/api/account", {
+      headers: { "X-Tracelet-Client": "local-ui" },
+    })).status()).toBe(200);
+  }
+});

@@ -3598,3 +3598,13 @@ select:focus {
   .usage-inline-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .usage-budget-form input { width: 100%; flex: 1; }
 }
+
+.email-header-analyzer { overflow-wrap: anywhere; }
+.email-header-analyzer > summary { cursor: pointer; font-weight: 550; }
+.email-header-analyzer p { margin: 10px 0; color: var(--muted); }
+.email-header-analyzer textarea { display: block; margin: 8px 0 12px; resize: vertical; }
+.email-header-results { margin-top: 22px; }
+.email-header-results h3 { margin-top: 16px; }
+.email-header-results dt { margin-top: 8px; font-weight: 550; }
+.email-header-results dd { margin: 2px 0 0; }
+.email-header-results li + li { margin-top: 8px; }
