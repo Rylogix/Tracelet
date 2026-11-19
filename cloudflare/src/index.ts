@@ -426,10 +426,11 @@ async function routes(
         { detail: "Search limit reached. Wait a minute before trying again." },
         429,
       );
+    const schemaVersion = kind === "website" ? 3 : 2;
     const cache = await env.DB.prepare(
-      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND json_extract(payload,'$.schema_version')=2 AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
+      "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND json_extract(payload,'$.schema_version')=? AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
     )
-      .bind(owner, query, kind, Date.now() - 300000)
+      .bind(owner, query, kind, schemaVersion, Date.now() - 300000)
       .first<{ payload: string }>();
     if (cache) {
       const cached = JSON.parse(cache.payload) as Job;
@@ -449,7 +450,7 @@ async function routes(
       return json({ ...cached, cached: true }, 202);
     }
     const job: Job = {
-      schema_version:2,
+      schema_version: schemaVersion,
       id: crypto.randomUUID(),
       query,
       target,

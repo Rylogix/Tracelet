@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, it, expect } from "vitest";
+import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { readFileSync } from "node:fs";
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
@@ -143,5 +143,53 @@ it("accounts for failed requests and provider-confirmed exhaustion", async () =>
     expect(Number(row?.blocked_until)).toBeGreaterThan(Date.now());
   } finally {
     globalThis.fetch = original;
+  }
+});
+
+it("returns only verified service-level breach metadata and distinguishes empty and failed lookups", async () => {
+  const record = {
+    Name: "Example", Title: "Example service", Domain: "example.com",
+    BreachDate: "2024-02-01", DataClasses: ["Email addresses", "Passwords"],
+    IsVerified: true, Description: "<b>Raw HTML</b>", PwnCount: 2000,
+  };
+  const fetchCatalog = vi.spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(Response.json([
+      record,
+      { ...record, Name: "Different", Domain: "other.example.com" },
+      { ...record, Name: "Unverified", IsVerified: false },
+    ]))
+    .mockResolvedValueOnce(Response.json([]))
+    .mockResolvedValueOnce(Response.json({ error: "Unexpected shape" }));
+  const env = { DB: db, ENCRYPTION_KEY: "" };
+  const lookup = () => adapter(env, "b", "hibp", "example.com", "website");
+  const clearLock = () => db.prepare("DELETE FROM provider_locks WHERE provider='hibp'").run();
+  try {
+    const results = await lookup();
+    expect(fetchCatalog).toHaveBeenCalledWith(
+      "https://haveibeenpwned.com/api/v3/breaches?domain=example.com",
+      expect.objectContaining({ redirect: "manual" }),
+    );
+    expect(results).toEqual([expect.objectContaining({
+      source: "Have I Been Pwned",
+      title: "Known service breach · Example service",
+      evidence: "https://haveibeenpwned.com/PwnedWebsites#Example",
+      value: {
+        domain: "example.com",
+        breach_date: "2024-02-01",
+        exposed_data_types: ["Email addresses", "Passwords"],
+        scope: expect.stringContaining("does not check individual accounts"),
+      },
+    })]);
+    await clearLock();
+    await expect(lookup()).resolves.toEqual([expect.objectContaining({
+      title: "No verified catalog matches for this domain",
+    })]);
+    await clearLock();
+    await expect(lookup()).rejects.toThrow("unexpected response");
+    await expect(adapter(env, "b", "hibp", "example.com", "email")).resolves.toEqual([]);
+    expect(fetchCatalog).toHaveBeenCalledTimes(3);
+  } finally {
+    fetchCatalog.mockRestore();
+    await clearLock();
   }
 });

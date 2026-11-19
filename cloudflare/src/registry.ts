@@ -10,6 +10,16 @@ export const registry = [
     license: "Provider public API terms",
   },
   {
+    id: "hibp",
+    name: "Have I Been Pwned",
+    description: "Known service-level breaches from the public breach catalog.",
+    kinds: ["website"],
+    credential: false,
+    rate: 10,
+    docs: "https://haveibeenpwned.com/API/v3#AllBreaches",
+    license: "Have I Been Pwned API terms",
+  },
+  {
     id: "dns",
     name: "DNS lookup",
     description: "Public DNS records via Google Public DNS over HTTPS.",

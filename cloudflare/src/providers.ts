@@ -30,6 +30,7 @@ export const finding = (
 const intervals: Record<string, number> = {
   dns: 500,
   rdap: 6000,
+  hibp: 6000,
   github: 6000,
   virustotal: 15000,
 };
@@ -324,6 +325,32 @@ export async function adapter(
   if (["dns","email-security","network"].includes(provider)) {
     const {domainAdapter}=await import("./enrichment");
     return domainAdapter(env,owner,provider,target,kind,options);
+  }
+  if (provider === "hibp" && kind === "website") {
+    const source = "Have I Been Pwned";
+    const catalog = "https://haveibeenpwned.com/PwnedWebsites";
+    const endpoint = new URL("https://haveibeenpwned.com/api/v3/breaches");
+    endpoint.searchParams.set("domain", target);
+    const records: unknown = await external(env, owner, provider, endpoint.href, {}, { timeout: 3500 });
+    if (!Array.isArray(records) || records.some(record => !record ||
+        typeof record.Domain !== "string" || typeof record.Name !== "string" ||
+        typeof record.Title !== "string" || typeof record.BreachDate !== "string" ||
+        !Array.isArray(record.DataClasses) || record.DataClasses.some((item: unknown) => typeof item !== "string") ||
+        typeof record.IsVerified !== "boolean"))
+      throw new Error("Breach catalog returned an unexpected response.");
+    const scope = "Service-level records only. This lookup does not check individual accounts.";
+    const matches = records.filter(record => record.Domain.toLowerCase() === target.toLowerCase() &&
+      record.IsVerified && !record.IsFabricated && !record.IsRetired);
+    if (!matches.length) {
+      return [finding(source, "No verified catalog matches for this domain", scope, catalog)];
+    }
+    return matches.sort((a, b) => b.BreachDate.localeCompare(a.BreachDate))
+      .map(record => finding(source, "Known service breach · " + record.Title, {
+        domain: record.Domain,
+        breach_date: record.BreachDate,
+        exposed_data_types: record.DataClasses,
+        scope,
+      }, catalog + "#" + encodeURIComponent(record.Name)));
   }
   if (provider === "rdap") {
     const url = await rdapEndpoint(target);

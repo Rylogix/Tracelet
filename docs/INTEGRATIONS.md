@@ -9,6 +9,7 @@ Registry declarations live in `backend/app/registry.py` and `cloudflare/src/regi
 | Email domain policies | Implemented | Implemented | SPF/DMARC, MTA-STS and TLS reporting DNS records; shared DNS budget; no mailbox/account enumeration |
 | Public network | Implemented | Implemented | Team Cymru public IP-to-ASN DNS service via Google DNS; one public IPv4 sample, routing prefix, registry and ASN name |
 | RDAP | Implemented | Implemented | IANA bootstrap + registry endpoint (hosted); RDAP.org bootstrap (local); registry-specific data restrictions |
+| Have I Been Pwned | Public breach catalog by exact Website domain | — | Keyless. Verified public service-level records; no individual account lookup. [API documentation](https://haveibeenpwned.com/API/v3#AllBreaches) |
 | libphonenumber | Implemented | Implemented | JS MIT wrapper / Apache-2.0 metadata; Python port Apache-2.0; offline data |
 | Image metadata | Browser exifr | Browser exifr + backend Pillow | exifr MIT; Pillow HPND; untrusted metadata |
 | PDF properties | Browser pdf-lib | Browser pdf-lib + backend pypdf | MIT / BSD-3-Clause; title, author, dates, page sizes/rotations; no scripts/macros executed |
