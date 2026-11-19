@@ -193,3 +193,36 @@ it("returns only verified service-level breach metadata and distinguishes empty 
     await clearLock();
   }
 });
+
+it("returns dated Wayback captures and filters unrelated certificate names", async () => {
+  const cert = {
+    id: 42, issuer_name: "Example CA", serial_number: "01",
+    name_value: "*.example.com\nexample.com\nexample.com.other.test\nother.test\nuser@example.com",
+    not_before: "2024-01-01T00:00:00", not_after: "2024-04-01T00:00:00",
+  };
+  const fetchHistory = vi.spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(Response.json([["timestamp"], ["20250201000000"], ["20020304050607"]]))
+    .mockResolvedValueOnce(Response.json([cert, { ...cert, id: 43 }, {
+      ...cert, id: 44, serial_number: "02", name_value: "other.test",
+    }]));
+  const env = { DB: db, ENCRYPTION_KEY: "" };
+  try {
+    const captures = await adapter(env, "b", "wayback", "example.com", "website");
+    expect(captures.map(capture => capture.evidence)).toEqual([
+      "https://web.archive.org/web/20020304050607/https://example.com/",
+      "https://web.archive.org/web/20250201000000/https://example.com/",
+    ]);
+    expect(captures[0].value).toMatchObject({ captured_at: "2002-03-04T05:06:07Z" });
+    const certificates = await adapter(env, "b", "certificate-transparency", "example.com", "website");
+    expect(certificates).toEqual([expect.objectContaining({
+      evidence: "https://crt.sh/?id=42",
+      value: expect.objectContaining({
+        certificate_names: ["*.example.com", "example.com"],
+        issuer: "Example CA",
+        valid_until: "2024-04-01T00:00:00",
+      }),
+    })]);
+  } finally {
+    fetchHistory.mockRestore();
+  }
+});

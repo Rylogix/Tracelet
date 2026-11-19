@@ -49,6 +49,7 @@ function findingDetails(finding: Finding): string[] {
   const fields = [
     "name", "login", "username", "handle", "bio", "blog", "url", "profile_url",
     "international", "country", "type", "valid", "possible",
+    "captured_at", "issuer", "valid_from", "valid_until", "certificate_names",
     "domain", "breach_date", "exposed_data_types", "scope",
     "answers", "response", "registrar", "registered", "expires", "status", "nameservers",
     "mx_records", "spf_records", "dmarc_policy", "mta_sts_records", "tls_reporting_records",

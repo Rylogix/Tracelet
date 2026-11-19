@@ -326,6 +326,10 @@ export async function adapter(
     const {domainAdapter}=await import("./enrichment");
     return domainAdapter(env,owner,provider,target,kind,options);
   }
+  if (provider === "wayback" || provider === "certificate-transparency") {
+    const { websiteHistory, certificateHistory } = await import("./website-history");
+    return provider === "wayback" ? websiteHistory(env, owner, target) : certificateHistory(env, owner, target);
+  }
   if (provider === "hibp" && kind === "website") {
     const source = "Have I Been Pwned";
     const catalog = "https://haveibeenpwned.com/PwnedWebsites";

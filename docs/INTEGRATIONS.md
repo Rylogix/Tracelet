@@ -10,6 +10,8 @@ Registry declarations live in `backend/app/registry.py` and `cloudflare/src/regi
 | Public network | Implemented | Implemented | Team Cymru public IP-to-ASN DNS service via Google DNS; one public IPv4 sample, routing prefix, registry and ASN name |
 | RDAP | Implemented | Implemented | IANA bootstrap + registry endpoint (hosted); RDAP.org bootstrap (local); registry-specific data restrictions |
 | Have I Been Pwned | Public breach catalog by exact Website domain | — | Keyless. Verified public service-level records; no individual account lookup. [API documentation](https://haveibeenpwned.com/API/v3#AllBreaches) |
+| Wayback Machine | Sampled homepage history | — | Public CDX index. Returns the earliest and most recent successful monthly samples, with links to captures and the timeline. |
+| crt.sh | Certificate Transparency history | — | Public domain-name search. Shows up to five distinct matching certificates and related names, with links to the log records. |
 | libphonenumber | Implemented | Implemented | JS MIT wrapper / Apache-2.0 metadata; Python port Apache-2.0; offline data |
 | Image metadata | Browser exifr | Browser exifr + backend Pillow | exifr MIT; Pillow HPND; untrusted metadata |
 | PDF properties | Browser pdf-lib | Browser pdf-lib + backend pypdf | MIT / BSD-3-Clause; title, author, dates, page sizes/rotations; no scripts/macros executed |

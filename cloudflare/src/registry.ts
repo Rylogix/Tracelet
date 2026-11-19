@@ -48,6 +48,26 @@ export const registry = [
     kinds:["website"],credential:false,rate:null,docs:"https://www.team-cymru.com/ip-asn-mapping",license:"Team Cymru service / Google Public DNS terms",
   },
   {
+    id: "wayback",
+    name: "Wayback Machine",
+    description: "Earliest and most recent sampled homepage captures in the Internet Archive.",
+    kinds: ["website"],
+    credential: false,
+    rate: 10,
+    docs: "https://web.archive.org/",
+    license: "Internet Archive terms",
+  },
+  {
+    id: "certificate-transparency",
+    name: "crt.sh",
+    description: "Recent matching certificates from public Certificate Transparency records, including expired certificates when returned.",
+    kinds: ["website"],
+    credential: false,
+    rate: 10,
+    docs: "https://crt.sh/",
+    license: "Public Certificate Transparency logs",
+  },
+  {
     id: "phone",
     name: "libphonenumber",
     description:

@@ -143,7 +143,7 @@ async function runJob(env: Env, owner: string, job: Job) {
     .filter((i) => !i.available)
     .map((i) => ({ name: i.name, reason: i.status }));
   await persist(env, owner, job);
-  const deadline=Date.now()+24000;
+  const deadline=Date.now()+(job.kind === "website" ? 28500 : 24000);
   for (const integration of runnable) {
     const current = await env.DB.prepare(
       "SELECT status FROM jobs WHERE id=? AND owner=?",
@@ -426,7 +426,7 @@ async function routes(
         { detail: "Search limit reached. Wait a minute before trying again." },
         429,
       );
-    const schemaVersion = kind === "website" ? 3 : 2;
+    const schemaVersion = kind === "website" ? 4 : 2;
     const cache = await env.DB.prepare(
       "SELECT payload FROM jobs WHERE owner=? AND query=? AND kind=? AND json_extract(payload,'$.schema_version')=? AND (status='completed' OR (json_extract(payload,'$.engine')='sherlock' AND status='partial')) AND updated>? LIMIT 1",
     )
