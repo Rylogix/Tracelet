@@ -3576,6 +3576,23 @@ select:focus {
 .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dashboard-page .panel { min-width: 0; margin: 0; }
 .dashboard-metrics dt, .dashboard-grid p, .dashboard-activity small { color: var(--muted); font-size: 12px; }
+.dashboard-metrics .panel { display: flex; flex-direction: column; }
+.dashboard-metrics dt { flex: 1; }
+.dashboard-metric-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 12px;
+  border: 1px solid var(--metric-border);
+  border-radius: 10px;
+  background: var(--metric-bg);
+  color: var(--metric-ink);
+}
+.dashboard-metric-icon--reports { --metric-ink: #c5b8ff; --metric-bg: #262139; --metric-border: #40365b; }
+.dashboard-metric-icon--searches { --metric-ink: #9bceff; --metric-bg: #1c2a38; --metric-border: #2e465f; }
+.dashboard-metric-icon--findings { --metric-ink: #f8ca88; --metric-bg: #34291e; --metric-border: #56422c; }
+.dashboard-metric-icon--requests { --metric-ink: #91e2c6; --metric-bg: #1b3029; --metric-border: #2c5043; }
 .dashboard-metrics dd { margin: 8px 0 0; font-size: 28px; font-variant-numeric: tabular-nums; }
 .dashboard-grid > :last-child { grid-column: 1 / -1; }
 .dashboard-grid p { margin: 6px 0 12px; }

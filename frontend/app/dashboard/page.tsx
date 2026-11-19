@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, FileText, Trash2 } from "lucide-react";
+import { Activity, Archive, ArrowRight, FileText, Fingerprint, Search, Trash2 } from "lucide-react";
 import { api } from "@/components/api";
 import type { ProviderUsage } from "@/components/usage-model";
 import { useWorkflow } from "@/components/workflow";
@@ -39,10 +39,10 @@ export default function Dashboard() {
   return <div className="workflow-page dashboard-page">
     <div className="page-heading"><h1>Dashboard</h1></div>
     <dl className="dashboard-metrics">
-      <div className="panel"><dt>Saved reports</dt><dd>{historyLoaded ? savedCount : "—"}</dd></div>
-      <div className="panel"><dt>Searches in draft</dt><dd>{draft ? entries.length : "—"}</dd></div>
-      <div className="panel"><dt>Findings in draft report</dt><dd>{draft ? included.reduce((total, entry) => total + entry.job.findings.length, 0) : "—"}</dd></div>
-      <div className="panel"><dt>Locally tracked API requests</dt><dd>{requests ?? "—"}</dd></div>
+      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--reports" aria-hidden="true"><Archive size={18} strokeWidth={1.75} /></span>Saved reports</dt><dd>{historyLoaded ? savedCount : "—"}</dd></div>
+      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--searches" aria-hidden="true"><Search size={18} strokeWidth={1.75} /></span>Searches in draft</dt><dd>{draft ? entries.length : "—"}</dd></div>
+      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--findings" aria-hidden="true"><Fingerprint size={18} strokeWidth={1.75} /></span>Findings in draft report</dt><dd>{draft ? included.reduce((total, entry) => total + entry.job.findings.length, 0) : "—"}</dd></div>
+      <div className="panel"><dt><span className="dashboard-metric-icon dashboard-metric-icon--requests" aria-hidden="true"><Activity size={18} strokeWidth={1.75} /></span>Locally tracked API requests</dt><dd>{requests ?? "—"}</dd></div>
     </dl>
 
     <div className="dashboard-grid">

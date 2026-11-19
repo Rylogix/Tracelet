@@ -152,6 +152,10 @@ test("public passkey signup, private real search, signout and account isolation"
   await page.getByRole("link",{name:"Dashboard",exact:true}).click();
   await expect(page.locator("main").getByRole("link")).toHaveCount(0);
   await expect(page.getByRole("heading",{name:"Searches by category"})).toBeVisible();
+  const metricIcons = page.locator(".dashboard-metric-icon");
+  await expect(metricIcons).toHaveCount(4);
+  for (const icon of await metricIcons.all()) await expect(icon).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator(".dashboard-breakdown > div").filter({hasText:"Number"}).locator("dd")).toHaveText("2");
   await expect(page.locator(".dashboard-activity")).toContainText("+442079460018");
   await expect(page.getByText("No usage recorded yet.")).toBeVisible();
