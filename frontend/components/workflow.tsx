@@ -41,8 +41,16 @@ export function WorkflowProvider({children}:{children:ReactNode}) {
   function patch(update:(value:Report)=>Report) {if(current.current)commit(update(current.current))}
   function add(job:Job) {
     if(!current.current)throw new Error("Workspace is still loading");
-    if(current.current.entries.length>=100)throw new Error("Save this report before starting more searches.");
-    patch(value=>({...value,entries:[...value.entries,{id:crypto.randomUUID(),included:true,job}]}));
+    const entries = current.current.entries;
+    const oldestUnselected = entries.length >= 100
+      ? entries.findIndex(entry => !entry.included && !["queued", "running"].includes(entry.job.status))
+      : -1;
+    if (entries.length >= 100 && oldestUnselected < 0)
+      throw new Error("Save this report before starting more searches.");
+    const retained = entries.filter((_, index) => index !== oldestUnselected);
+    patch(value => ({ ...value, entries: [
+      ...retained, { id: crypto.randomUUID(), included: false, job },
+    ] }));
   }
   useEffect(()=>{
     let polling=false;
@@ -53,11 +61,15 @@ export function WorkflowProvider({children}:{children:ReactNode}) {
       try {
         const outcomes=await Promise.allSettled(active.map(async id=>{
           try{return await api<Job>("/search/"+id)}catch(error){
-            if(error instanceof ApiError && error.status===404){const old=current.current!.entries.find(e=>e.job.id===id)!.job;return {...old,status:"interrupted",notes:[...old.notes,"Search expired. Run it again to continue."]}}
+            if(error instanceof ApiError && error.status===404){
+              const old=current.current?.entries.find(e=>e.job.id===id)?.job;
+              if(!old)return null;
+              return {...old,status:"interrupted",notes:[...old.notes,"Search expired. Run it again to continue."]};
+            }
             throw error;
           }
         }));
-        const jobs=outcomes.filter((o):o is PromiseFulfilledResult<Job>=>o.status==="fulfilled").map(o=>o.value);
+        const jobs=outcomes.flatMap(o=>o.status==="fulfilled" && o.value ? [o.value] : []);
         const failure=outcomes.find(o=>o.status==="rejected");
         if(failure?.status==="rejected")setError(failure.reason.message);
         if(!mounted.current)return;

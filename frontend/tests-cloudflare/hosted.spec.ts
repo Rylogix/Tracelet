@@ -113,8 +113,11 @@ test("public passkey signup, private real search, signout and account isolation"
       await expect(searchBox).toBeFocused({ timeout: 300 });
     }).toPass();
   }
-  await page.getByLabel("Search", { exact: true }).fill("+442079460018");
+  await expect(searchBox).toHaveAttribute("type", "tel");
+  await searchBox.pressSequentially("+442079460018");
+  await expect(searchBox).toHaveValue("+442079460018");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Number search: +442079460018" })).toBeVisible();
   await expect(page.getByText("Number format", { exact: true })).toBeVisible({
     timeout: 20000,
   });
@@ -146,9 +149,17 @@ test("public passkey signup, private real search, signout and account isolation"
   const workspace = await (await page.request.get("/api/workspace")).json();
   expect(workspace.entries).toHaveLength(1);
   const id = workspace.entries[0].job.id;
+  expect(workspace.entries[0].included).toBe(false);
+  await page.locator("main").getByRole("link", {name:"Report",exact:true}).click();
+  await expect(page.getByText("Your report is empty", {exact:true})).toBeVisible();
+  await page.getByRole("link", {name:"Number",exact:true}).click();
+  await page.getByRole("button",{name:"Add +442079460018 to report",exact:true}).click();
   await page.getByLabel("Search", {exact:true}).fill("+12025550123");
   await page.getByRole("button", {name:"Search",exact:true}).click();
   await expect(page.getByRole("region", {name:"Number search: +12025550123"})).toBeVisible();
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
+  await expect(page.getByRole("region", {name:"Number search: +442079460018"})).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Add +12025550123 to report",exact:true})).toBeVisible();
   await page.getByRole("link",{name:"Dashboard",exact:true}).click();
   await expect(page.locator("main").getByRole("link")).toHaveCount(0);
   await expect(page.getByRole("heading",{name:"Searches by category"})).toBeVisible();
@@ -187,15 +198,15 @@ test("public passkey signup, private real search, signout and account isolation"
     { timeout: 15000 },
   );
   expect(uploads).toHaveLength(0);
+  await page.getByRole("button",{name:"Add café.png to report",exact:true}).click();
   await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
   await expect(page.getByRole("heading",{name:"Report",exact:true})).toBeVisible();
   await expect(page.locator('a[aria-current="page"]:visible')).toHaveText(/^Report/);
-  await expect(page.locator(".workflow-entry")).toHaveCount(3);
+  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.getByRole("region",{name:"Number search: +442079460018"})).toBeVisible();
   await page.getByLabel("Report title").fill("Workflow α case");
-  await page.getByRole("button",{name:"Remove +12025550123 from report",exact:true}).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(2);
   await page.getByRole("link",{name:"Number",exact:true}).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
   await expect(page.getByRole("button",{name:"Add +12025550123 to report",exact:true})).toBeVisible();
   await page.getByRole("link",{name:"Report",exact:true}).last().click();
   await expect(page.locator('a[aria-current="page"]:visible')).toHaveText(/^Report/);
@@ -427,16 +438,15 @@ test("live hosted DNS and RDAP smoke", async ({ page }) => {
   const github=scan.checks.find((c:{provider:string})=>c.provider==="github");
   expect(["found","unavailable"]).toContain(github.status);
   console.info("Live username checks:",scan.findings.length,"matches; GitHub:",github.status,github.reason||"");
+  await page.getByRole("button",{name:"Add octocat to report",exact:true}).click();
   await searchTab("Username","torvalds");
-  await expect(page.locator(".workflow-entry")).toHaveCount(2);
-  await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(4);
-  await page.getByRole("button",{name:"Remove tracelet-fixture@gmail.com from report",exact:true}).click();
-  await page.getByRole("button",{name:"Remove torvalds from report",exact:true}).click();
-  await page.getByRole("button",{name:"Remove example.com from report",exact:true}).click();
   await expect(page.locator(".workflow-entry")).toHaveCount(1);
+  await expect(page.getByRole("region",{name:"Username search: octocat"})).toHaveCount(0);
+  await page.locator("main").getByRole("link",{name:"Report",exact:true}).click();
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
+  await expect(page.getByRole("region",{name:"Username search: octocat"})).toBeVisible();
   await page.getByRole("link",{name:"Username",exact:true}).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(2);
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
   await expect(page.getByRole("button",{name:"Add torvalds to report",exact:true})).toBeVisible();
   expect(
     (

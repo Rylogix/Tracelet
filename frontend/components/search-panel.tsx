@@ -19,9 +19,9 @@ export function EntryPanel({entry,report=false,readOnly=false}:{entry:Entry;repo
     </div><div className="actions">
       {active && <Button size="sm" variant="outline" onClick={()=>cancel(job.id).catch(e=>setError(e.message))}><Square size={12}/>Cancel</Button>}
       {report && !readOnly && <button className="icon-button remove-entry" aria-label={"Remove "+job.query+" from report"} title="Remove from report" onClick={()=>include(entry.id,false)}><X size={17}/></button>}
-      {!report && <button className={"report-toggle "+(entry.included?"is-included":"")} onClick={()=>include(entry.id,!entry.included)} aria-label={(entry.included?"Remove ":"Add ")+job.query+(entry.included?" from report":" to report")}>
+      {!report && <Button size="sm" variant={entry.included?"outline":"default"} onClick={()=>include(entry.id,!entry.included)} aria-label={(entry.included?"Remove ":"Add ")+job.query+(entry.included?" from report":" to report")}>
         {entry.included?"In report":<><Plus size={13}/>Add to report</>}
-      </button>}
+      </Button>}
     </div></div>
     {active && job.total>0 && <div className="job-progress" role="progressbar" aria-label="Investigation progress" aria-valuenow={job.completed} aria-valuemax={job.total}><span style={{width:Math.min(100,job.completed/job.total*100)+"%"}}/></div>}
     {error && <p role="alert" className="error">{error}</p>}
@@ -41,6 +41,7 @@ export function SearchPanel({kind}:{kind:string}) {
   const [query,setQuery]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");
   const input=useRef<HTMLInputElement>(null);const file=useRef<HTMLInputElement>(null);
   const entries=draft?.entries.filter(e=>e.job.kind===kind)||[];
+  const latest=entries.at(-1);
   const running=entries.some(e=>["queued","running"].includes(e.job.status));
   useEffect(()=>{const listener=(e:KeyboardEvent)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();input.current?.focus()}};window.addEventListener("keydown",listener);return()=>window.removeEventListener("keydown",listener)},[]);
   async function search(e:React.FormEvent) {
@@ -60,8 +61,8 @@ export function SearchPanel({kind}:{kind:string}) {
     </>:<form className="workflow-search" onSubmit={search}><Search size={20}/><input aria-label="Search" ref={input} value={query} onChange={e=>setQuery(e.target.value)} placeholder={type.placeholder} type={kind==="email"?"email":kind==="phone"?"tel":"text"} maxLength={253} required/><Button disabled={busy||running||!draft}>{busy?"Starting…":"Search"}<ArrowRight size={15}/></Button></form>}
     {error && <div role="alert" className="error">{error}</div>}
     {kind==="email" && <EmailHeaderAnalyzer/>}
-    <div className="section-heading"><h2>Results <span className="muted">{entries.length||""}</span></h2></div>
-    <div className="entry-stack">{[...entries].reverse().map(e=><EntryPanel key={e.id} entry={e}/>)}</div>
-    {!entries.length && <div className="workflow-empty"><FileSearch size={27}/><span>{draft?"No searches yet":"Loading…"}</span></div>}
+    <div className="section-heading"><h2>Results</h2></div>
+    {latest && <EntryPanel key={latest.id} entry={latest}/>}
+    {!latest && <div className="workflow-empty"><FileSearch size={27}/><span>{draft?"No searches yet":"Loading…"}</span></div>}
   </div>;
 }

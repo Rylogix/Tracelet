@@ -10,9 +10,8 @@ test("first run and real phone search", async ({ page }) => {
   if (await welcome.isVisible()) await welcome.click();
   await page.getByRole("link", {name:"Number",exact:true}).click();
   await page.getByLabel("Search", { exact: true }).fill("+442079460018");
-  const before=await page.locator(".workflow-entry").count();
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await expect(page.locator(".workflow-entry")).toHaveCount(before+1);
+  await expect(page.locator(".workflow-entry")).toHaveCount(1);
   await expect(page.getByText("Number format", { exact: true }).first()).toBeVisible({
     timeout: 20000,
   });
