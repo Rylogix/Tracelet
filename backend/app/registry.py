@@ -10,7 +10,7 @@ REGISTRY = [
         kinds=["username"],
         license="Provider public API terms",
         credential=False,
-        docs="https://github.com/Rylogix/Tracelet/blob/main/INTEGRATIONS.md",
+        docs="https://github.com/Rylogix/Tracelet/blob/main/docs/INTEGRATIONS.md",
         rate=None,
     ),
     dict(

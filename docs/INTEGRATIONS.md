@@ -14,7 +14,7 @@ Registry declarations live in `backend/app/registry.py` and `cloudflare/src/regi
 | PDF properties | Browser pdf-lib | Browser pdf-lib + backend pypdf | MIT / BSD-3-Clause; title, author, dates, page sizes/rotations; no scripts/macros executed |
 | Office/OpenDocument metadata | Browser fflate | Browser fflate | MIT; bounded ZIP metadata extraction only; macros and document contents are not executed |
 | ExifTool | Unavailable | Disabled pending native validation | Artistic/GPL dual terms; native executable installation |
-| Sherlock | Container adapter prepared; account plan blocks deployment | Disabled pending native integration | MIT; see [Cloudflare setup](cloudflare/sherlock/README.md) |
+| Sherlock | Container adapter prepared; account plan blocks deployment | Disabled pending native integration | MIT; see [Cloudflare setup](../cloudflare/sherlock/README.md) |
 | Maigret | Unavailable | Disabled pending compatibility tests | MIT; broad enumeration must be carefully scoped |
 | VirusTotal | Optional personal key | Optional personal key | Domain endpoint implemented; live credential validation pending; official free-tier rules apply |
 | AbuseIPDB | Disabled candidate | Disabled candidate | Official registration link only; no untested requests |

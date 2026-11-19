@@ -6,7 +6,7 @@ export const registry = [
     kinds: ["username"],
     credential: false,
     rate: null,
-    docs: "https://github.com/Rylogix/Tracelet/blob/main/INTEGRATIONS.md",
+    docs: "https://github.com/Rylogix/Tracelet/blob/main/docs/INTEGRATIONS.md",
     license: "Provider public API terms",
   },
   {

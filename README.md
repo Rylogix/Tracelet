@@ -12,4 +12,8 @@ Tracelet is a web workspace for public-source lookups and investigation reports.
 4. **Build a report.** Open **Report**, give it a title, and keep the searches you want to include. Download a short **PDF** or export the detailed **TXT**. **Save to history & clear** archives the report and starts a fresh draft.
 5. **Review activity and settings.** The **Dashboard** shows recent draft searches, saved reports, and locally recorded requests. In **Settings**, connect an optional VirusTotal key, inspect API usage, and manage local request budgets and alerts. Allowances appear when providers report them.
 
-This GitHub release covers the Tracelet website. See [Cloudflare setup](docs/CLOUDFLARE.md) for hosting the web app and [contributing](CONTRIBUTING.md) for development. Tracelet is [MIT licensed](LICENSE).
+This GitHub release covers the Tracelet website. See [Cloudflare setup](docs/CLOUDFLARE.md) for hosting the web app and [contributing](.github/CONTRIBUTING.md) for development. Tracelet is [MIT licensed](LICENSE).
+
+## Project documentation
+
+[Architecture](docs/ARCHITECTURE.md) · [Product specification](docs/SPEC.md) · [Integrations](docs/INTEGRATIONS.md) · [API limits](docs/API_LIMITS.md) · [Security policy](.github/SECURITY.md)

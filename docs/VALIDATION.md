@@ -43,7 +43,7 @@ For deterministic Workers tests without real external requests, run `npm test` w
 - **Three production Playwright checks passed** against the actual HTTPS domain: public passkey signup, replay rejection, sign-out/sign-in, real phone lookup, account and credential isolation, browser-only image metadata with no upload; unauthenticated/cross-origin rejection; and real DNS plus RDAP queries for example.com.
 - Temporary production test accounts and their data were removed through the account-deletion API.
 - Production test requests use the environment's required outbound proxy. Synthetic CF-Connecting-IP headers remain limited to local tests: sending them to Cloudflare itself correctly triggers Cloudflare error 1000. No zone security settings were weakened to run tests.
-- The app's native tool and integration limitations remain as documented in INTEGRATIONS.md. Native Windows/macOS and real-device passkey testing remain outstanding.
+- The app's native tool and integration limitations remain as documented in [the integrations guide](INTEGRATIONS.md). Native Windows/macOS and real-device passkey testing remain outstanding.
 
 ## Matte charcoal interface update — 2026-11-14
 
