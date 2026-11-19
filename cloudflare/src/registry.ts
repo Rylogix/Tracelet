@@ -50,7 +50,7 @@ export const registry = [
   {
     id: "wayback",
     name: "Wayback Machine",
-    description: "Earliest and most recent sampled homepage captures in the Internet Archive.",
+    description: "A recent archived homepage and the Internet Archive timeline.",
     kinds: ["website"],
     credential: false,
     rate: 10,
@@ -59,12 +59,12 @@ export const registry = [
   },
   {
     id: "certificate-transparency",
-    name: "crt.sh",
-    description: "Recent matching certificates from public Certificate Transparency records, including expired certificates when returned.",
+    name: "Cert Spotter",
+    description: "Recent unexpired certificates from Certificate Transparency logs and a link to historical records.",
     kinds: ["website"],
     credential: false,
     rate: 10,
-    docs: "https://crt.sh/",
+    docs: "https://sslmate.com/certspotter/api/",
     license: "Public Certificate Transparency logs",
   },
   {
